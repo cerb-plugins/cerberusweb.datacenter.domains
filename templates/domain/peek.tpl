@@ -90,6 +90,7 @@
 <script type="text/javascript">
 	$popup = genericAjaxPopupFetch('peek');
 	$popup.one('popup_open', function(event,ui) {
+		$(this).find('input[type=text]:first').focus();
 		$(this).dialog('option','title',"{'cerberusweb.datacenter.domain'|devblocks_translate}");
 		$(this).find('textarea[name=comment]').keyup(function() {
 			if($(this).val().length > 0) {
