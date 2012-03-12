@@ -587,7 +587,9 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		switch($column) {
 			case SearchFields_Domain::SERVER_ID:
 				$servers = DAO_Server::getAll();
-				$label_map = array();
+				$label_map = array(
+					'0' => '(none)',
+				);
 				foreach($servers as $server_id => $server)
 					$label_map[$server_id] = $server->name;
 				$counts = $this->_getSubtotalCountForStringColumn('DAO_Domain', $column, $label_map, 'in', 'server_id[]');
@@ -698,7 +700,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 				
 				foreach($values as $val) {
 					if(empty($val))
-						$strings[] = "";
+						$strings[] = "(none)";
 					elseif(!isset($servers[$val]))
 						continue;
 					else
