@@ -72,12 +72,6 @@ class Page_Domains extends CerberusPageExtension {
 		$response = DevblocksPlatform::getHttpResponse();
 		$active_worker = CerberusApplication::getActiveWorker();
 
-		// Remember the last tab/URL
-		if(null == ($selected_tab = @$response->path[1])) {
-			$selected_tab = $visit->get('cerberusweb.datacenter.domain.tab', '');
-		}
-		$tpl->assign('selected_tab', $selected_tab);
-
 		// Path
 		$stack = $response->path;
 		@array_shift($stack); // datacenter.domains
@@ -88,6 +82,12 @@ class Page_Domains extends CerberusPageExtension {
 				@$domain_id = intval(array_shift($stack)); // id
 				if(is_numeric($domain_id) && null != ($domain = DAO_Domain::get($domain_id)))
 					$tpl->assign('domain', $domain);
+				
+				// Remember the last tab/URL
+				if(null == ($selected_tab = @$response->path[3])) {
+					$selected_tab = $visit->get('cerberusweb.datacenter.domain.tab', '');
+				}
+				$tpl->assign('selected_tab', $selected_tab);
 				
 				$tab_manifests = DevblocksPlatform::getExtensions('cerberusweb.datacenter.domain.tab', false);
 				uasort($tab_manifests, create_function('$a, $b', "return strcasecmp(\$a->name,\$b->name);\n"));
@@ -139,6 +139,7 @@ class Page_Domains extends CerberusPageExtension {
 				
 				$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/display/index.tpl');		
 				break;
+				
 			default:
 				break;
 		}

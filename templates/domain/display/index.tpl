@@ -62,22 +62,24 @@
 
 <div id="datacenterDomainTabs">
 	<ul>
+		{$point = 'cerberusweb.datacenter.domain.tab'}
 		{$tabs = [activity, comments, links]}
+		
 		<li><a href="{devblocks_url}ajax.php?c=internal&a=showTabActivityLog&scope=target&point={$point}&context=cerberusweb.contexts.datacenter.domain&context_id={$page_context_id}{/devblocks_url}">{'common.activity_log'|devblocks_translate|capitalize}</a></li>		
-		<li><a href="{devblocks_url}ajax.php?c=internal&a=showTabContextComments&context=cerberusweb.contexts.datacenter.domain&id={$page_context_id}{/devblocks_url}">{'common.comments'|devblocks_translate|capitalize}</a></li>
-		<li><a href="{devblocks_url}ajax.php?c=internal&a=showTabContextLinks&context=cerberusweb.contexts.datacenter.domain&id={$page_context_id}{/devblocks_url}">{'common.links'|devblocks_translate}</a></li>
+		<li><a href="{devblocks_url}ajax.php?c=internal&a=showTabContextComments&context=cerberusweb.contexts.datacenter.domain&id={$page_context_id}&point={$point}{/devblocks_url}">{'common.comments'|devblocks_translate|capitalize}</a></li>
+		<li><a href="{devblocks_url}ajax.php?c=internal&a=showTabContextLinks&context=cerberusweb.contexts.datacenter.domain&id={$page_context_id}&point={$point}{/devblocks_url}">{'common.links'|devblocks_translate}</a></li>
 	</ul>
 </div> 
 <br>
 
-{$tab_selected_idx=0}
+{$selected_tab_idx=0}
 {foreach from=$tabs item=tab_label name=tabs}
-	{if $tab_label==$tab_selected}{$tab_selected_idx = $smarty.foreach.tabs.index}{/if}
+	{if $tab_label==$selected_tab}{$selected_tab_idx = $smarty.foreach.tabs.index}{/if}
 {/foreach}
 
 <script type="text/javascript">
 	$(function() {
-		var tabs = $("#datacenterDomainTabs").tabs( { selected:{$tab_selected_idx} } );
+		var tabs = $("#datacenterDomainTabs").tabs( { selected:{$selected_tab_idx} } );
 		
 		$('#btnDatacenterDomainEdit').bind('click', function() {
 			$popup = genericAjaxPopup('peek','c=datacenter.domains&a=showDomainPeek&id={$page_context_id}',null,false,'550');
