@@ -84,12 +84,14 @@
 				<name>Context_Domain</name>
 			</class>
 			<params>
+				<param key="view_class" value="domain" />
 				<param key="view_class" value="View_Domain" />
 				<param key="options">
 					<value>
 						<!--<data key="create" />-->
 						<data key="find" />
 						<data key="snippets" />
+						<data key="va_variable" />
 						<data key="workspace" />
 					</value>
 				</param>
@@ -106,6 +108,7 @@
 				<name>Event_DomainMacro</name>
 			</class>
 			<params>
+				<param key="macro_context" value="cerberusweb.contexts.datacenter.domain" />
 				<param key="contexts">
 					<value>
 						<data key="cerberusweb.contexts.worker" />
