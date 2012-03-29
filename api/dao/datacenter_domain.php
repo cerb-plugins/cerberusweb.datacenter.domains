@@ -134,6 +134,7 @@ class Context_Domain extends Extension_DevblocksContext {
 		$view->renderSortBy = SearchFields_Domain::NAME;
 		$view->renderSortAsc = true;
 		$view->renderLimit = 10;
+		$view->renderFilters = true;
 		$view->renderTemplate = 'contextlinks_chooser';
 		
 		C4_AbstractViewLoader::setView($view_id, $view);
@@ -639,8 +640,6 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		
 		switch($this->renderTemplate) {
 			case 'contextlinks_chooser':
-				$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/view_contextlinks_chooser.tpl');
-				break;
 			default:
 				$tpl->assign('view_template', 'devblocks:cerberusweb.datacenter.domains::domain/view.tpl');
 				$tpl->display('devblocks:cerberusweb.core::internal/views/subtotals_and_view.tpl');
