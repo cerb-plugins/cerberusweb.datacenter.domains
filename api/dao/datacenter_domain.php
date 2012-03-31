@@ -87,6 +87,10 @@ class Context_Domain extends Extension_DevblocksContext {
 					}
 				}
 			}
+			
+			// Watchers
+			$watchers = CerberusContexts::getWatchers('cerberusweb.contexts.datacenter.domain', $domain->id, true);
+			$token_values['watchers'] = $watchers;
 		}
 		
 		// Addy
