@@ -363,10 +363,6 @@ class DAO_Domain extends C4_ORMHelper {
 	}	
 	
 	private static function _translateVirtualParameters($param, $key, &$args) {
-		$join_sql =& $args['join_sql'];
-		$where_sql =& $args['where_sql']; 
-		$has_multiple_values =& $args['has_multiple_values'];
-		
 		if(!is_a($param, 'DevblocksSearchCriteria'))
 			return;
 	
@@ -374,11 +370,11 @@ class DAO_Domain extends C4_ORMHelper {
 		settype($param_key, 'string');
 		switch($param_key) {
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
-				$has_multiple_values = true;
+				$args['has_multiple_values'] = true;
 				$from_context = 'cerberusweb.contexts.datacenter.domain';
 				$from_index = 'datacenter_domain.id';
 				
-				self::_searchComponentsVirtualWatchers($param, $from_context, $from_index, $join_sql, $where_sql);
+				self::_searchComponentsVirtualWatchers($param, $from_context, $from_index, $args['join_sql'], $args['where_sql']);
 				break;
 		}
 	}
@@ -656,27 +652,40 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 			case SearchFields_Domain::NAME:
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__string.tpl');
 				break;
+				
 			case SearchFields_Domain::ID:
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__number.tpl');
 				break;
+				
 			case 'placeholder_bool':
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__bool.tpl');
 				break;
+				
 			case SearchFields_Domain::CREATED:
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__date.tpl');
 				break;
-			case SearchFields_Domain::SERVER_ID:
-				$servers = DAO_Server::getAll();
-				$tpl->assign('servers', $servers);
 				
-				$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/filter/server.tpl');
+			case SearchFields_Domain::SERVER_ID:
+				$options = array();
+				$servers = DAO_Server::getAll();
+				
+				if(is_array($servers))
+				foreach($servers as $server_id => $server) { /* @var $server Model_Server */
+					$options[$server_id] = $server->name;
+				}
+				
+				$tpl->assign('options', $options);
+				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__list.tpl');
 				break;
+				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__context_worker.tpl');
 				break;
+				
 			case SearchFields_Domain::FULLTEXT_COMMENT_CONTENT:
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__fulltext.tpl');
 				break;
+				
 			default:
 				// Custom Fields
 				if('cf_' == substr($field,0,3)) {
@@ -720,8 +729,9 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 					else
 						$strings[] = $servers[$val]->name;
 				}
-				echo implode(", ", $strings);
+				echo implode(" or ", $strings);
 				break;
+				
 			default:
 				parent::renderCriteriaParam($param);
 				break;
@@ -737,25 +747,14 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 
 		switch($field) {
 			case SearchFields_Domain::NAME:
-				// force wildcards if none used on a LIKE
-				if(($oper == DevblocksSearchCriteria::OPER_LIKE || $oper == DevblocksSearchCriteria::OPER_NOT_LIKE)
-				&& false === (strpos($value,'*'))) {
-					$value = $value.'*';
-				}
-				$criteria = new DevblocksSearchCriteria($field, $oper, $value);
+				$criteria = $this->_doSetCriteriaString($field, $oper, $value);
 				break;
 			case SearchFields_Domain::ID:
 				$criteria = new DevblocksSearchCriteria($field,$oper,$value);
 				break;
 				
 			case SearchFields_Domain::CREATED:
-				@$from = DevblocksPlatform::importGPC($_REQUEST['from'],'string','');
-				@$to = DevblocksPlatform::importGPC($_REQUEST['to'],'string','');
-
-				if(empty($from)) $from = 0;
-				if(empty($to)) $to = 'today';
-
-				$criteria = new DevblocksSearchCriteria($field,$oper,array($from,$to));
+				$criteria = $this->_doSetCriteriaDate($field, $oper);
 				break;
 				
 			case 'placeholder_bool':
@@ -764,8 +763,8 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 				break;
 				
 			case SearchFields_Domain::SERVER_ID:
-				@$server_ids = DevblocksPlatform::importGPC($_REQUEST['server_id'],'array',array());
-				$criteria = new DevblocksSearchCriteria($field,$oper,$server_ids);
+				@$options = DevblocksPlatform::importGPC($_REQUEST['options'],'array',array());
+				$criteria = new DevblocksSearchCriteria($field,$oper,$options);
 				break;
 				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
