@@ -151,7 +151,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		$tpl->clearAssign('params');
 	}
 	
-	function runConditionExtension($token, $trigger, $params, $values) {
+	function runConditionExtension($token, $trigger, $params, DevblocksDictionaryDelegate $dict) {
 		$pass = true;
 		
 		switch($token) {
@@ -166,11 +166,11 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				switch($token) {
 					case 'domain_link':
 						$from_context = CerberusContexts::CONTEXT_DOMAIN;
-						@$from_context_id = $values['domain_id'];
+						@$from_context_id = $dict->domain_id;
 						break;
 					case 'domain_server_link':
 						$from_context = CerberusContexts::CONTEXT_SERVER;
-						@$from_context_id = $values['domain_server_id'];
+						@$from_context_id = $dict->domain_server_id;
 						break;
 					default:
 						$pass = false;
@@ -298,39 +298,39 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		$tpl->clearAssign('token_labels');		
 	}
 	
-	function simulateActionExtension($token, $trigger, $params, &$values) {
-		@$domain_id = $values['domain_id'];
+	function simulateActionExtension($token, $trigger, $params, DevblocksDictionaryDelegate $dict) {
+		@$domain_id = $dict->domain_id;
 
 		if(empty($domain_id))
 			return;
 		
 		switch($token) {
 			case 'add_watchers':
-				return DevblocksEventHelper::simulateActionAddWatchers($params, $values, 'domain_id');
+				return DevblocksEventHelper::simulateActionAddWatchers($params, $dict, 'domain_id');
 				break;
 			
 			case 'create_comment':
-				return DevblocksEventHelper::simulateActionCreateComment($params, $values, 'domain_id');
+				return DevblocksEventHelper::simulateActionCreateComment($params, $dict, 'domain_id');
 				break;
 				
 			case 'create_notification':
-				return DevblocksEventHelper::simulateActionCreateNotification($params, $values, 'domain_id');
+				return DevblocksEventHelper::simulateActionCreateNotification($params, $dict, 'domain_id');
 				break;
 				
 			case 'create_task':
-				return DevblocksEventHelper::simulateActionCreateTask($params, $values, 'domain_id');
+				return DevblocksEventHelper::simulateActionCreateTask($params, $dict, 'domain_id');
 				break;
 
 			case 'create_ticket':
-				return DevblocksEventHelper::simulateActionCreateTicket($params, $values, 'domain_id');
+				return DevblocksEventHelper::simulateActionCreateTicket($params, $dict, 'domain_id');
 				break;
 				
 			case 'schedule_behavior':
-				return DevblocksEventHelper::simulateActionScheduleBehavior($params, $values);
+				return DevblocksEventHelper::simulateActionScheduleBehavior($params, $dict);
 				break;
 				
 			case 'unschedule_behavior':
-				return DevblocksEventHelper::simulateActionUnscheduleBehavior($params, $values);
+				return DevblocksEventHelper::simulateActionUnscheduleBehavior($params, $dict);
 				break;
 				
 			case 'set_domain_links':
@@ -353,45 +353,45 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 					}
 					
 					if(!empty($context) && !empty($context_id))
-						return DevblocksEventHelper::simulateActionSetCustomField($custom_field, 'domain_custom', $params, $values, $context, $context_id);
+						return DevblocksEventHelper::simulateActionSetCustomField($custom_field, 'domain_custom', $params, $dict, $context, $context_id);
 				}
 				break;	
 		}
 	}	
 	
-	function runActionExtension($token, $trigger, $params, &$values) {
-		@$domain_id = $values['domain_id'];
+	function runActionExtension($token, $trigger, $params, DevblocksDictionaryDelegate $dict) {
+		@$domain_id = $dict->domain_id;
 
 		if(empty($domain_id))
 			return;
 		
 		switch($token) {
 			case 'add_watchers':
-				DevblocksEventHelper::runActionAddWatchers($params, $values, 'domain_id');
+				DevblocksEventHelper::runActionAddWatchers($params, $dict, 'domain_id');
 				break;
 			
 			case 'create_comment':
-				DevblocksEventHelper::runActionCreateComment($params, $values, 'domain_id');
+				DevblocksEventHelper::runActionCreateComment($params, $dict, 'domain_id');
 				break;
 				
 			case 'create_notification':
-				DevblocksEventHelper::runActionCreateNotification($params, $values, 'domain_id');
+				DevblocksEventHelper::runActionCreateNotification($params, $dict, 'domain_id');
 				break;
 				
 			case 'create_task':
-				DevblocksEventHelper::runActionCreateTask($params, $values, 'domain_id');
+				DevblocksEventHelper::runActionCreateTask($params, $dict, 'domain_id');
 				break;
 
 			case 'create_ticket':
-				DevblocksEventHelper::runActionCreateTicket($params, $values, 'domain_id');
+				DevblocksEventHelper::runActionCreateTicket($params, $dict, 'domain_id');
 				break;
 				
 			case 'schedule_behavior':
-				DevblocksEventHelper::runActionScheduleBehavior($params, $values);
+				DevblocksEventHelper::runActionScheduleBehavior($params, $dict);
 				break;
 				
 			case 'unschedule_behavior':
-				DevblocksEventHelper::runActionUnscheduleBehavior($params, $values);
+				DevblocksEventHelper::runActionUnscheduleBehavior($params, $dict);
 				break;
 				
 			case 'set_domain_links':
@@ -407,11 +407,11 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				switch($token) {
 					case 'set_domain_links':
 						$from_context = CerberusContexts::CONTEXT_DOMAIN;
-						@$from_context_id = $values['domain_id'];
+						@$from_context_id = $dict->domain_id;
 						break;
 					case 'set_domain_server_links':
 						$from_context = CerberusContexts::CONTEXT_SERVER;
-						@$from_context_id = $values['domain_server_id'];
+						@$from_context_id = $dict->domain_server_id;
 						break;
 				}
 				
@@ -444,7 +444,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 					}
 					
 					if(!empty($context) && !empty($context_id))
-						DevblocksEventHelper::runActionSetCustomField($custom_field, 'domain_custom', $params, $values, $context, $context_id);
+						DevblocksEventHelper::runActionSetCustomField($custom_field, 'domain_custom', $params, $dict, $context, $context_id);
 				}
 				break;	
 		}

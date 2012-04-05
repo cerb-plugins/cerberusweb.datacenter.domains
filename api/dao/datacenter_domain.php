@@ -18,27 +18,25 @@ class Context_Domain extends Extension_DevblocksContext {
 	}
     
 	function getContext($id_map, &$token_labels, &$token_values, $prefix=null) {
-		if(is_array($id_map)) {
-			$domain = $id_map['id'];
-		} else {
+		$domain = null;
+
+		// Polymorph
+		if(is_numeric($id_map)) {
+			$domain = DAO_Domain::get($id_map);
+		} elseif(is_array($id_map) && isset($id_map['id'])) {
+			$domain = DAO_Domain::get($id_map['id']);
+		} elseif($id_map instanceof Model_Domain) {
 			$domain = $id_map;
+		} else {
+			$domain = null;
 		}
 		
 		if(is_null($prefix))
 			$prefix = 'Domain:';
 		
 		$translate = DevblocksPlatform::getTranslationService();
-		$fields = DAO_CustomField::getByContext('cerberusweb.contexts.datacenter.domain');
+		$fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN);
 		
-		// Polymorph
-		if(is_numeric($domain)) {
-			$domain = DAO_Domain::get($domain);
-		} elseif($domain instanceof Model_Domain) {
-			// It's what we want already.
-		} else {
-			$domain = null;
-		}
-			
 		// Token labels
 		$token_labels = array(
 			'created|date' => $prefix.$translate->_('common.created'),
@@ -54,49 +52,33 @@ class Context_Domain extends Extension_DevblocksContext {
 		// Token values
 		$token_values = array();
 		
-		// Address token values
+		$token_values['_context'] = CerberusContexts::CONTEXT_DOMAIN;
+		
+		// Domain token values
 		if(null != $domain) {
+			$token_values['_loaded'] = true;
+			$token_values['_label'] = $domain->name;
 			$token_values['id'] = $domain->id;
 			$token_values['created'] = $domain->created;
-			if(!empty($domain->name))
-				$token_values['name'] = $domain->name;
+			$token_values['name'] = $domain->name;
 			
 			// URL
 			$url_writer = DevblocksPlatform::getUrlService();
 			$token_values['record_url'] = $url_writer->writeNoProxy(sprintf("c=datacenter.domains&tab=domain&id=%d-%s",$domain->id, DevblocksPlatform::strToPermalink($domain->name)), true);
 			
-			$token_values['custom'] = array();
+			// Addy
+			// [TODO]
 			
-			$field_values = array_shift(DAO_CustomFieldValue::getValuesByContextIds('cerberusweb.contexts.datacenter.domain', $domain->id));
-			if(is_array($field_values) && !empty($field_values)) {
-				foreach($field_values as $cf_id => $cf_val) {
-					if(!isset($fields[$cf_id]))
-						continue;
-					
-					// The literal value
-					if(null != $domain)
-						$token_values['custom'][$cf_id] = $cf_val;
-					
-					// Stringify
-					if(is_array($cf_val))
-						$cf_val = implode(', ', $cf_val);
-						
-					if(is_string($cf_val)) {
-						if(null != $domain)
-							$token_values['custom_'.$cf_id] = $cf_val;
-					}
-				}
-			}
-			
-			// Watchers
-			$watchers = CerberusContexts::getWatchers('cerberusweb.contexts.datacenter.domain', $domain->id, true);
-			$token_values['watchers'] = $watchers;
+			// Server
+			$server_id = (null != $domain && !empty($domain->server_id)) ? $domain->server_id : null;
+			$token_values['server_id'] = $server_id;
 		}
-		
+
 		// Addy
+		$address_id = (is_array($id_map) && isset($id_map['address_id'])) ? $id_map['address_id'] : null;
 		$merge_token_labels = array();
 		$merge_token_values = array();
-		CerberusContexts::getContext(CerberusContexts::CONTEXT_ADDRESS, @$id_map['address_id'], $merge_token_labels, $merge_token_values, null, true);
+		CerberusContexts::getContext(CerberusContexts::CONTEXT_ADDRESS, $address_id, $merge_token_labels, $merge_token_values, null, true);
 
 		CerberusContexts::merge(
 			'contact_',
@@ -108,10 +90,9 @@ class Context_Domain extends Extension_DevblocksContext {
 		);
 		
 		// Server
-		$server_id = (null != $domain && !empty($domain->server_id)) ? $domain->server_id : null;
 		$merge_token_labels = array();
 		$merge_token_values = array();
-		CerberusContexts::getContext('cerberusweb.contexts.datacenter.server', $server_id, $merge_token_labels, $merge_token_values, null, true);
+		CerberusContexts::getContext(CerberusContexts::CONTEXT_SERVER, null, $merge_token_labels, $merge_token_values, null, true);
 
 		CerberusContexts::merge(
 			'server_',
@@ -125,6 +106,39 @@ class Context_Domain extends Extension_DevblocksContext {
 		return true;		
 	}
 
+	function lazyLoadContextValues($token, $dictionary) {
+		if(!isset($dictionary['id']))
+			return;
+		
+		$context = CerberusContexts::CONTEXT_DOMAIN;
+		$context_id = $dictionary['id'];
+		
+		@$is_loaded = $dictionary['_loaded'];
+		$values = array();
+		
+		if(!$is_loaded) {
+			CerberusContexts::getContext($context, $context_id, $labels, $values);
+		}
+		
+		switch($token) {
+			case 'watchers':
+				$watchers = array(
+					$token => CerberusContexts::getWatchers($context, $context_id, true),
+				);
+				$values = array_merge($values, $watchers);
+				break;
+				
+			default:
+				if(substr($token,0,7) == 'custom_') {
+					$fields = $this->_lazyLoadCustomFields($context, $context_id);
+					$values = array_merge($values, $fields);
+				}
+				break;
+		}
+		
+		return $values;
+	}	
+	
 	function getChooserView() {
 		// View
 		$view_id = 'chooser_'.str_replace('.','_',$this->id).time().mt_rand(0,9999);
@@ -499,7 +513,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 		}
 		
 		// Sort by label (translation-conscious)
-		uasort($columns, create_function('$a, $b', "return strcasecmp(\$a->db_label,\$b->db_label);\n"));
+		DevblocksPlatform::sortObjects($columns, 'db_label');
 
 		return $columns;		
 	}
@@ -555,6 +569,10 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		return $objects;
 	}
 
+	function getDataAsObjects($ids=null) {
+		return $this->_getDataAsObjects('DAO_Domain', $ids);
+	}
+	
 	function getDataSample($size) {
 		return $this->_doGetDataSample('DAO_Domain', $size);
 	}

@@ -90,7 +90,7 @@ class Page_Domains extends CerberusPageExtension {
 				$tpl->assign('selected_tab', $selected_tab);
 				
 				$tab_manifests = DevblocksPlatform::getExtensions('cerberusweb.datacenter.domain.tab', false);
-				uasort($tab_manifests, create_function('$a, $b', "return strcasecmp(\$a->name,\$b->name);\n"));
+				DevblocksPlatform::sortObjects($tab_manifests, 'name');
 				$tpl->assign('tab_manifests', $tab_manifests);
 
 				// Custom fields
@@ -162,7 +162,7 @@ class Page_Domains extends CerberusPageExtension {
 		
 		$view = C4_AbstractViewLoader::getView('datacenter_domains', $defaults);
 		
-        $visit->set('quick_search_type', $type);
+        $visit->set('domains_quick_search_type', $type);
         
         $params = array();
         
