@@ -83,11 +83,18 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				'label' => 'Server',
 				'context' => CerberusContexts::CONTEXT_SERVER,
 			),
+			'domain_server_watchers' => array(
+				'label' => 'Server watchers',
+				'context' => CerberusContexts::CONTEXT_WORKER,
+			),
 		);
 		
 		$vars = parent::getValuesContexts($trigger);
 		
-		return array_merge($vals, $vars);
+		$vals_to_ctx = array_merge($vals, $vars);
+		asort($vals_to_ctx);
+		
+		return $vals_to_ctx;
 	}
 	
 	function getConditionExtensions() {
@@ -95,8 +102,9 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		
 		$labels['domain_link'] = 'Domain is linked';
 		$labels['domain_server_link'] = 'Server is linked';
-		//$labels['domain_contact_link'] = 'Domain is linked';
-		//$labels['domain_contact_org_link'] = 'Domain is linked';
+		
+		$labels['domain_server_watcher_count'] = 'Server watcher count';
+		$labels['domain_watcher_count'] = 'Domain watcher count';
 		
 		$types = array(
 			'domain_name' => Model_CustomField::TYPE_SINGLE_LINE,
@@ -123,7 +131,9 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 			
 			'domain_link' => null,
 			'domain_server_link' => null,
-			//'domain_contact_org_link' => null,
+		
+			'domain_server_watcher_count' => null,
+			'domain_watcher_count' => null,
 		);
 
 		$conditions = $this->_importLabelsTypesAsConditions($labels, $types);
@@ -144,6 +154,11 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				$contexts = Extension_DevblocksContext::getAll(false);
 				$tpl->assign('contexts', $contexts);
 				$tpl->display('devblocks:cerberusweb.core::events/condition_link.tpl');
+				break;
+				
+			case 'domain_server_watcher_count':
+			case 'domain_watcher_count':
+				$tpl->display('devblocks:cerberusweb.core::internal/decisions/conditions/_number.tpl');
 				break;
 		}
 
@@ -203,6 +218,43 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				}
 				
 				break;
+				
+			case 'domain_server_watcher_count':
+			case 'domain_watcher_count':
+				$not = (substr($params['oper'],0,1) == '!');
+				$oper = ltrim($params['oper'],'!');
+				
+				switch($token) {
+					case 'domain_contact_org_watcher_count':
+						$value = count($dict->domain_contact_org_watchers);
+						break;
+					case 'domain_contact_watcher_count':
+						$value = count($dict->domain_contact_watchers);
+						break;
+					case 'domain_server_watcher_count':
+						$value = count($dict->domain_server_watchers);
+						break;
+					case 'domain_watcher_count':
+					default:
+						$value = count($dict->domain_watchers);
+						break;
+				}
+				
+				switch($oper) {
+					case 'is':
+						$pass = intval($value)==intval($params['value']);
+						break;
+					case 'gt':
+						$pass = intval($value) > intval($params['value']);
+						break;
+					case 'lt':
+						$pass = intval($value) < intval($params['value']);
+						break;
+				}
+				
+				$pass = ($not) ? !$pass : $pass;
+				break;
+				
 			default:
 				$pass = false;
 				break;
