@@ -204,6 +204,9 @@ class DAO_Domain extends C4_ORMHelper {
 	
 	static function update($ids, $fields) {
 		parent::_update($ids, 'datacenter_domain', $fields);
+		
+	    // Log the context update
+   		DevblocksPlatform::markContextChanged(CerberusContexts::CONTEXT_DOMAIN, $ids);
 	}
 	
 	static function updateWhere($fields, $where) {
