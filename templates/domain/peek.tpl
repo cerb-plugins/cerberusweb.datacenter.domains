@@ -2,6 +2,10 @@
 <input type="hidden" name="c" value="datacenter.domains">
 <input type="hidden" name="a" value="saveDomainPeek">
 {if !empty($model) && !empty($model->id)}<input type="hidden" name="id" value="{$model->id}">{/if}
+{if !empty($link_context)}
+<input type="hidden" name="link_context" value="{$link_context}">
+<input type="hidden" name="link_context_id" value="{$link_context_id}">
+{/if}
 <input type="hidden" name="do_delete" value="0">
 
 <fieldset>

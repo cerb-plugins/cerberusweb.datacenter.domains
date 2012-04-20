@@ -66,7 +66,7 @@
 			<td colspan="{$smarty.foreach.headers.total}">
 				<input type="checkbox" name="row_id[]" value="{$result.w_id}" style="display:none;">
 				<a href="{devblocks_url}c=datacenter.domains&a=domain&id={$result.w_id}-{$result.w_name|devblocks_permalink}{/devblocks_url}" class="subject">{$result.w_name}</a>
-				<button type="button" class="peek" style="visibility:hidden;padding:1px;margin:0px 5px;" onclick="genericAjaxPopup('peek','c=datacenter.domains&a=showDomainPeek&view_id={$view->id}&id={$result.w_id}', null, false, '500');"><span class="cerb-sprite2 sprite-document-search-result" style="margin-left:2px" title="{$translate->_('views.peek')}"></span></button>
+				<button type="button" class="peek" style="visibility:hidden;padding:1px;margin:0px 5px;" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={CerberusContexts::CONTEXT_DOMAIN}&context_id={$result.w_id}&view_id={$view->id}',null,false,'500');"><span class="cerb-sprite2 sprite-document-search-result" style="margin-left:2px" title="{$translate->_('views.peek')}"></span></button>
 			</td>
 		</tr>
 		<tr class="{$tableRowClass}">
@@ -77,7 +77,7 @@
 				{if empty($servers)}{$servers = DAO_Server::getAll()}{/if}
 				<td>
 					{if !empty($result.$column) && isset($servers.{$result.$column})}
-						<a href="javascript:;" onclick="genericAjaxPopup('peek','c=datacenter&a=showServerPeek&view_id={$view->id}&id={$servers.{$result.$column}->id}', null, false, '500');">{$servers.{$result.$column}->name}</a>
+						<a href="javascript:;" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={CerberusContexts::CONTEXT_SERVER}&context_id={$servers.{$result.$column}->id}&view_id={$view->id}',null,false,'500');">{$servers.{$result.$column}->name}</a>
 					{/if}
 				</td>
 			{elseif $column=="w_created"}

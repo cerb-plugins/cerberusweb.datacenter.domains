@@ -84,11 +84,11 @@
 				<name>Context_Domain</name>
 			</class>
 			<params>
-				<param key="view_class" value="domain" />
+				<param key="alias" value="domain" />
 				<param key="view_class" value="View_Domain" />
 				<param key="options">
 					<value>
-						<!--<data key="create" />-->
+						<data key="create" />
 						<data key="find" />
 						<data key="snippets" />
 						<data key="va_variable" />
@@ -130,21 +130,6 @@
 			<params>
 				<param key="uri" value="datacenter.domains" />
 				<param key="menutitle" value="" />
-			</params>
-		</extension>
-		
-		<!-- Datacenter Tab -->
-		
-		<extension point="cerberusweb.datacenter.tab">
-			<id>cerberusweb.datacenter.domains.datacenter_tab</id>
-			<name>Domains Tab</name>
-			<class>
-				<file>api/App.php</file>
-				<name>ChDomainsDatacenterTab</name>
-			</class>
-			<params>
-				<param key="uri" value="domains" />
-				<param key="title" value="cerberusweb.datacenter.domains" />
 			</params>
 		</extension>
 		

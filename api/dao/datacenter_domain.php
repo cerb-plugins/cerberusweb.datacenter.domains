@@ -1,5 +1,5 @@
 <?php
-class Context_Domain extends Extension_DevblocksContext {
+class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextPeek {
 	function getRandom() {
 		return DAO_Domain::random();
 	}
@@ -152,7 +152,7 @@ class Context_Domain extends Extension_DevblocksContext {
 		$view->renderSortBy = SearchFields_Domain::NAME;
 		$view->renderSortAsc = true;
 		$view->renderLimit = 10;
-		$view->renderFilters = true;
+		$view->renderFilters = false;
 		$view->renderTemplate = 'contextlinks_chooser';
 		
 		C4_AbstractViewLoader::setView($view_id, $view);
@@ -181,6 +181,48 @@ class Context_Domain extends Extension_DevblocksContext {
 		$view->renderTemplate = 'context';
 		C4_AbstractViewLoader::setView($view_id, $view);
 		return $view;
+	}
+	
+	function renderPeekPopup($context_id=0, $view_id='') {
+		$id = $context_id; // [TODO] Cleanup
+		
+		$tpl = DevblocksPlatform::getTemplateService();
+		$tpl->assign('view_id', $view_id);
+		
+		// Model
+		$model = null;
+		if(empty($id) || null == ($model = DAO_Domain::get($id)))
+			$model = new Model_Domain();
+		
+		$tpl->assign('model', $model);
+		
+		// Servers
+		$servers = DAO_Server::getAll();
+		$tpl->assign('servers', $servers);
+		
+		// Custom fields
+		$custom_fields = DAO_CustomField::getByContext('cerberusweb.contexts.datacenter.domain'); 
+		$tpl->assign('custom_fields', $custom_fields);
+
+		$custom_field_values = DAO_CustomFieldValue::getValuesByContextIds('cerberusweb.contexts.datacenter.domain', $id);
+		if(isset($custom_field_values[$id]))
+			$tpl->assign('custom_field_values', $custom_field_values[$id]);
+		
+		$types = Model_CustomField::getTypes();
+		$tpl->assign('types', $types);
+		
+		// Context: Addresses
+		$context_addresses = Context_Address::searchInboundLinks('cerberusweb.contexts.datacenter.domain', $id);
+		$tpl->assignByRef('context_addresses', $context_addresses);
+		
+		// Comments
+		$comments = DAO_Comment::getByContext('cerberusweb.contexts.datacenter.domain', $id);
+		$last_comment = array_shift($comments);
+		unset($comments);
+		$tpl->assign('last_comment', $last_comment);
+		
+		// Render
+		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek.tpl');
 	}
 };
 
@@ -491,11 +533,11 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 		
 		$columns = array(
 			self::ID => new DevblocksSearchField(self::ID, 'datacenter_domain', 'id', $translate->_('common.id')),
-			self::NAME => new DevblocksSearchField(self::NAME, 'datacenter_domain', 'name', $translate->_('common.name')),
+			self::NAME => new DevblocksSearchField(self::NAME, 'datacenter_domain', 'name', $translate->_('common.name'), Model_CustomField::TYPE_SINGLE_LINE),
 			self::SERVER_ID => new DevblocksSearchField(self::SERVER_ID, 'datacenter_domain', 'server_id', $translate->_('cerberusweb.datacenter.common.server')),
-			self::CREATED => new DevblocksSearchField(self::CREATED, 'datacenter_domain', 'created', $translate->_('common.created')),
+			self::CREATED => new DevblocksSearchField(self::CREATED, 'datacenter_domain', 'created', $translate->_('common.created'), Model_CustomField::TYPE_DATE),
 			
-			self::VIRTUAL_WATCHERS => new DevblocksSearchField(self::VIRTUAL_WATCHERS, '*', 'workers', $translate->_('common.watchers')),
+			self::VIRTUAL_WATCHERS => new DevblocksSearchField(self::VIRTUAL_WATCHERS, '*', 'workers', $translate->_('common.watchers'), 'WS'),
 			
 			self::CONTEXT_LINK => new DevblocksSearchField(self::CONTEXT_LINK, 'context_link', 'from_context', null),
 			self::CONTEXT_LINK_ID => new DevblocksSearchField(self::CONTEXT_LINK_ID, 'context_link', 'from_context_id', null),
@@ -503,7 +545,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 		
 		$tables = DevblocksPlatform::getDatabaseTables();
 		if(isset($tables['fulltext_comment_content'])) {
-			$columns[self::FULLTEXT_COMMENT_CONTENT] = new DevblocksSearchField(self::FULLTEXT_COMMENT_CONTENT, 'ftcc', 'content', $translate->_('comment.filters.content'));
+			$columns[self::FULLTEXT_COMMENT_CONTENT] = new DevblocksSearchField(self::FULLTEXT_COMMENT_CONTENT, 'ftcc', 'content', $translate->_('comment.filters.content'), 'FT');
 		}
 		
 		// Custom Fields
@@ -512,7 +554,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 		if(is_array($fields))
 		foreach($fields as $field_id => $field) {
 			$key = 'cf_'.$field_id;
-			$columns[$key] = new DevblocksSearchField($key,$key,'field_value',$field->name);
+			$columns[$key] = new DevblocksSearchField($key,$key,'field_value',$field->name,$field->type);
 		}
 		
 		// Sort by label (translation-conscious)

@@ -1,12 +1,10 @@
 {$page_context = 'cerberusweb.contexts.datacenter.domain'}
 {$page_context_id = $domain->id}
 
-{include file="devblocks:cerberusweb.datacenter.domains::domain/display/submenu.tpl"}
-
-<h2>{'cerberusweb.datacenter.domain'|devblocks_translate|capitalize}</h2>
+<h1>{$domain->name}</h1>
 
 <fieldset class="properties">
-	<legend>{$domain->name}</legend>
+	<legend>{'cerberusweb.datacenter.domain'|devblocks_translate|capitalize}</legend>
 	
 	<form action="{devblocks_url}{/devblocks_url}" method="post" style="margin-bottom:5px;">
 
@@ -14,7 +12,7 @@
 			<div class="property">
 				{if $k == 'server'}
 					<b>{$v.label|capitalize}:</b>
-					<a href="javascript:;" onclick="genericAjaxPopup('peek','c=datacenter&a=showServerPeek&view_id=&id={$domain->server_id}', null, false, '500');">{$v.server->name}</a>
+					<a href="javascript:;" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={CerberusContexts::CONTEXT_SERVER}&context_id={$domain->server_id}&view_id={$view->id}',null,false,'500');">{$v.server->name}</a>
 				{else}
 					{include file="devblocks:cerberusweb.core::internal/custom_fields/profile_cell_renderer.tpl"}
 				{/if}
@@ -82,7 +80,7 @@
 		var tabs = $("#datacenterDomainTabs").tabs( { selected:{$selected_tab_idx} } );
 		
 		$('#btnDatacenterDomainEdit').bind('click', function() {
-			$popup = genericAjaxPopup('peek','c=datacenter.domains&a=showDomainPeek&id={$page_context_id}',null,false,'550');
+			$popup = genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={$page_context}&context_id={$page_context_id}',null,false,'500');
 			$popup.one('datacenter_domain_save', function(event) {
 				event.stopPropagation();
 				document.location.href = '{devblocks_url}c=datacenter.domains&a=domain&id={$page_context_id}{/devblocks_url}';

@@ -1,29 +1,4 @@
 <?php
-if(class_exists('Extension_DatacenterTab', true)):
-class ChDomainsDatacenterTab extends Extension_DatacenterTab {
-	function showTab() {
-		$tpl = DevblocksPlatform::getTemplateService();
-
-		// View
-		$view_id = 'datacenter_domains';
-		
-		$defaults = new C4_AbstractViewModel();
-		$defaults->id = $view_id;
-		$defaults->class_name = 'View_Domain';
-		
-		$view = C4_AbstractViewLoader::getView($view_id, $defaults);
-		$view->id = $view_id;
-		$view->name = 'Domains';
-		$tpl->assign('view', $view);
-		
-		C4_AbstractViewLoader::setView($view_id, $view);
-
-		// Template
-		$tpl->display('devblocks:cerberusweb.datacenter.domains::datacenter_tab/index.tpl');
-	}
-};
-endif;
-
 if(class_exists('Extension_ServerTab', true)):
 class ChDomainsServerTab extends Extension_ServerTab {
 	function showTab(Model_Server $server) {
@@ -146,93 +121,6 @@ class Page_Domains extends CerberusPageExtension {
 		
 	}
 	
-	// Post	
-	function doQuickSearchAction() {
-        @$type = DevblocksPlatform::importGPC($_POST['type'],'string'); 
-        @$query = DevblocksPlatform::importGPC($_POST['query'],'string');
-
-        $query = trim($query);
-        
-        $visit = CerberusApplication::getVisit(); /* @var $visit CerberusVisit */
-		$active_worker = CerberusApplication::getActiveWorker();
-		
-		$defaults = new C4_AbstractViewModel();
-		$defaults->id = 'datacenter_domains';
-		$defaults->class_name = 'View_Domain';
-		
-		$view = C4_AbstractViewLoader::getView('datacenter_domains', $defaults);
-		
-        $visit->set('domains_quick_search_type', $type);
-        
-        $params = array();
-        
-        switch($type) {
-            case "name":
-		        if($query && false===strpos($query,'*'))
-		            $query = $query . '*';
-                $params[SearchFields_Domain::NAME] = new DevblocksSearchCriteria(SearchFields_Domain::NAME,DevblocksSearchCriteria::OPER_LIKE,strtolower($query));               
-                break;
-                
-            case "comments_all":
-            	$params[SearchFields_Domain::FULLTEXT_COMMENT_CONTENT] = new DevblocksSearchCriteria(SearchFields_Domain::FULLTEXT_COMMENT_CONTENT,DevblocksSearchCriteria::OPER_FULLTEXT,array($query,'all'));               
-                break;
-                
-            case "comments_phrase":
-            	$params[SearchFields_Domain::FULLTEXT_COMMENT_CONTENT] = new DevblocksSearchCriteria(SearchFields_Domain::FULLTEXT_COMMENT_CONTENT,DevblocksSearchCriteria::OPER_FULLTEXT,array($query,'phrase'));               
-                break;
-        }
-        
-        $view->addParams($params, true);
-        $view->renderPage = 0;
-        
-        C4_AbstractViewLoader::setView($view->id, $view);
-        
-        DevblocksPlatform::redirect(new DevblocksHttpResponse(array('datacenter','domains')));
-	}	
-	
-	function showDomainPeekAction() {
-		@$id = DevblocksPlatform::importGPC($_REQUEST['id'],'integer',0);
-		@$view_id = DevblocksPlatform::importGPC($_REQUEST['view_id'],'string','');
-		
-		$tpl = DevblocksPlatform::getTemplateService();
-		$tpl->assign('view_id', $view_id);
-		
-		// Model
-		$model = null;
-		if(empty($id) || null == ($model = DAO_Domain::get($id)))
-			$model = new Model_Domain();
-		
-		$tpl->assign('model', $model);
-		
-		// Servers
-		$servers = DAO_Server::getAll();
-		$tpl->assign('servers', $servers);
-		
-		// Custom fields
-		$custom_fields = DAO_CustomField::getByContext('cerberusweb.contexts.datacenter.domain'); 
-		$tpl->assign('custom_fields', $custom_fields);
-
-		$custom_field_values = DAO_CustomFieldValue::getValuesByContextIds('cerberusweb.contexts.datacenter.domain', $id);
-		if(isset($custom_field_values[$id]))
-			$tpl->assign('custom_field_values', $custom_field_values[$id]);
-		
-		$types = Model_CustomField::getTypes();
-		$tpl->assign('types', $types);
-		
-		// Context: Addresses
-		$context_addresses = Context_Address::searchInboundLinks('cerberusweb.contexts.datacenter.domain', $id);
-		$tpl->assignByRef('context_addresses', $context_addresses);
-		
-		// Comments
-		$comments = DAO_Comment::getByContext('cerberusweb.contexts.datacenter.domain', $id);
-		$last_comment = array_shift($comments);
-		unset($comments);
-		$tpl->assign('last_comment', $last_comment);
-		
-		// Render
-		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek.tpl');
-	}
-	
 	function saveDomainPeekAction() {
 		$active_worker = CerberusApplication::getActiveWorker();
 		
@@ -281,6 +169,13 @@ class Page_Domains extends CerberusPageExtension {
 					DAO_Comment::ADDRESS_ID => $active_worker->getAddress()->id,
 				);
 				$comment_id = DAO_Comment::create($fields, $also_notify_worker_ids);
+			}
+			
+			// Context Link (if given)
+			@$link_context = DevblocksPlatform::importGPC($_REQUEST['link_context'],'string','');
+			@$link_context_id = DevblocksPlatform::importGPC($_REQUEST['link_context_id'],'integer','');
+			if(!empty($id) && !empty($link_context) && !empty($link_context_id)) {
+				DAO_ContextLink::setLink(CerberusContexts::CONTEXT_DOMAIN, $id, $link_context, $link_context_id);
 			}
 			
 			// Custom field saves
