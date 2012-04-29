@@ -132,6 +132,21 @@
 				<param key="menutitle" value="" />
 			</params>
 		</extension>
+
+		<!-- Profile Page Sections -->
+		
+		<extension point="cerberusweb.ui.page.section">
+			<id>cerberusweb.datacenter.page.profiles.domain</id>
+			<name>Domain Section</name>
+			<class>
+				<file>api/profiles/domain.php</file>
+				<name>PageSection_ProfilesDomain</name>
+			</class>
+			<params>
+				<param key="page_id" value="core.page.profiles" />
+				<param key="uri" value="domain" />
+			</params>
+		</extension>
 		
 		<!-- Server Tab -->
 		

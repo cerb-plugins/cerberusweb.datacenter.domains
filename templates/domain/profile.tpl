@@ -1,7 +1,16 @@
 {$page_context = 'cerberusweb.contexts.datacenter.domain'}
 {$page_context_id = $domain->id}
 
-<h1>{$domain->name}</h1>
+<div style="float:left;">
+	<h1>{$domain->name}</h1>
+</div>
+
+<div style="float:right;">
+	{$ctx = Extension_DevblocksContext::get($page_context)}
+	{include file="devblocks:cerberusweb.core::search/quick_search.tpl" view=$ctx->getSearchView() return_url="{devblocks_url}c=search&context={$ctx->manifest->params.alias}{/devblocks_url}" reset=true}
+</div>
+
+<div style="clear:both;"></div>
 
 <fieldset class="properties">
 	<legend>{'cerberusweb.datacenter.domain'|devblocks_translate|capitalize}</legend>
@@ -31,7 +40,7 @@
 			</span>		
 
 			<!-- Macros -->
-			{devblocks_url assign=return_url full=true}c=datacenter.domains&tab=domain&id={$page_context_id}-{$domain->name|devblocks_permalink}{/devblocks_url}
+			{devblocks_url assign=return_url full=true}c=profiles&type=domain&id={$page_context_id}-{$domain->name|devblocks_permalink}{/devblocks_url}
 			{include file="devblocks:cerberusweb.core::internal/macros/display/button.tpl" context=$page_context context_id=$page_context_id macros=$macros return_url=$return_url}		
 		
 			<!-- Edit -->
@@ -60,7 +69,6 @@
 
 <div id="datacenterDomainTabs">
 	<ul>
-		{$point = 'cerberusweb.datacenter.domain.tab'}
 		{$tabs = [activity, comments, links]}
 		
 		<li><a href="{devblocks_url}ajax.php?c=internal&a=showTabActivityLog&scope=target&point={$point}&context=cerberusweb.contexts.datacenter.domain&context_id={$page_context_id}{/devblocks_url}">{'common.activity_log'|devblocks_translate|capitalize}</a></li>		
@@ -83,7 +91,7 @@
 			$popup = genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={$page_context}&context_id={$page_context_id}',null,false,'500');
 			$popup.one('datacenter_domain_save', function(event) {
 				event.stopPropagation();
-				document.location.href = '{devblocks_url}c=datacenter.domains&a=domain&id={$page_context_id}{/devblocks_url}';
+				document.location.href = '{devblocks_url}c=profiles&type=domain&id={$page_context_id}{/devblocks_url}';
 			});
 		});
 		

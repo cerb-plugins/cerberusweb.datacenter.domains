@@ -41,84 +41,6 @@ class Page_Domains extends CerberusPageExtension {
 	}
 	
 	function render() {
-		$tpl = DevblocksPlatform::getTemplateService();
-		$visit = CerberusApplication::getVisit();
-		$translate = DevblocksPlatform::getTranslationService();
-		$response = DevblocksPlatform::getHttpResponse();
-		$active_worker = CerberusApplication::getActiveWorker();
-
-		// Path
-		$stack = $response->path;
-		@array_shift($stack); // datacenter.domains
-		@$module = array_shift($stack); // domain
-
-		switch($module) {
-			case 'domain':
-				@$domain_id = intval(array_shift($stack)); // id
-				if(is_numeric($domain_id) && null != ($domain = DAO_Domain::get($domain_id)))
-					$tpl->assign('domain', $domain);
-				
-				// Remember the last tab/URL
-				if(null == ($selected_tab = @$response->path[3])) {
-					$selected_tab = $visit->get('cerberusweb.datacenter.domain.tab', '');
-				}
-				$tpl->assign('selected_tab', $selected_tab);
-				
-				$tab_manifests = DevblocksPlatform::getExtensions('cerberusweb.datacenter.domain.tab', false);
-				DevblocksPlatform::sortObjects($tab_manifests, 'name');
-				$tpl->assign('tab_manifests', $tab_manifests);
-
-				// Custom fields
-				
-				$custom_fields = DAO_CustomField::getAll();
-				$tpl->assign('custom_fields', $custom_fields);
-				
-				// Properties
-				
-				$properties = array();
-
-				if(!empty($domain->server_id)) {
-					if(null != ($server = DAO_Server::get($domain->server_id))) {
-						$properties['server'] = array(
-							'label' => ucfirst($translate->_('cerberusweb.datacenter.common.server')),
-							'type' => null,
-							'server' => $server,
-						);
-					}
-				}
-				
-				$properties['created'] = array(
-					'label' => ucfirst($translate->_('common.created')),
-					'type' => Model_CustomField::TYPE_DATE,
-					'value' => $domain->created,
-				);
-				
-				@$values = array_shift(DAO_CustomFieldValue::getValuesByContextIds('cerberusweb.contexts.datacenter.domain', $domain->id)) or array();
-		
-				foreach($custom_fields as $cf_id => $cfield) {
-					if(!isset($values[$cf_id]))
-						continue;
-						
-					$properties['cf_' . $cf_id] = array(
-						'label' => $cfield->name,
-						'type' => $cfield->type,
-						'value' => $values[$cf_id],
-					);
-				}
-				
-				$tpl->assign('properties', $properties);
-				
-				// Macros
-				$macros = DAO_TriggerEvent::getByOwner(CerberusContexts::CONTEXT_WORKER, $active_worker->id, 'event.macro.domain');
-				$tpl->assign('macros', $macros);
-				
-				$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/display/index.tpl');		
-				break;
-				
-			default:
-				break;
-		}
-		
 	}
 	
 	function saveDomainPeekAction() {
@@ -456,7 +378,7 @@ class Page_Domains extends CerberusPageExtension {
 				$model->pos = $pos++;
 				$model->params = array(
 					'id' => $id,
-					'url' => $url_writer->writeNoProxy(sprintf("c=datacenter.domains&tab=domain&id=%d", $id), true),
+					'url' => $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%d", $id), true),
 				);
 				$models[] = $model; 
 			}
