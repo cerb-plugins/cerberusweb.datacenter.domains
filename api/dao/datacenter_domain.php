@@ -1,5 +1,5 @@
 <?php
-class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextPeek {
+class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextPeek, IDevblocksContextImport {
 	function getRandom() {
 		return DAO_Domain::random();
 	}
@@ -139,9 +139,11 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		return $values;
 	}	
 	
-	function getChooserView() {
+	function getChooserView($view_id=null) {
+		if(empty($view_id))
+			$view_id = 'chooser_'.str_replace('.','_',$this->id).time().mt_rand(0,9999);
+	
 		// View
-		$view_id = 'chooser_'.str_replace('.','_',$this->id).time().mt_rand(0,9999);
 		$defaults = new C4_AbstractViewModel();
 		$defaults->id = $view_id;
 		$defaults->is_ephemeral = true;
@@ -224,6 +226,77 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		// Render
 		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek.tpl');
 	}
+	
+	function importGetKeys() {
+		// [TODO] Translate
+	
+		$keys = array(
+			'created' => array(
+				'label' => 'Created Date',
+				'type' => Model_CustomField::TYPE_DATE,
+				'param' => SearchFields_Domain::CREATED,
+			),
+			'name' => array(
+				'label' => 'Name',
+				'type' => Model_CustomField::TYPE_SINGLE_LINE,
+				'param' => SearchFields_Domain::NAME,
+				'required' => true,
+				'force_match' => true,
+			),
+// 			'primary_email_id' => array(
+// 				'label' => 'Email',
+// 				'type' => 'ctx_' . CerberusContexts::CONTEXT_ADDRESS,
+// 				'param' => SearchFields_CrmOpportunity::PRIMARY_EMAIL_ID,
+// 			),
+		);
+	
+		$cfields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN);
+	
+		foreach($cfields as $cfield_id => $cfield) {
+			$keys['cf_' . $cfield_id] = array(
+				'label' => $cfield->name,
+				'type' => $cfield->type,
+				'param' => 'cf_' . $cfield_id,
+			);
+		}
+	
+		DevblocksPlatform::sortObjects($keys, '[label]', true);
+	
+		return $keys;
+	}
+	
+	function importKeyValue($key, $value) {
+		switch($key) {
+		}
+	
+		return $value;
+	}
+	
+	function importSaveObject(array $fields, array $custom_fields, array $meta) {
+		// If new...
+		if(!isset($meta['object_id']) || empty($meta['object_id'])) {
+			// Make sure we have a name
+			if(!isset($fields[DAO_Domain::NAME])) {
+				$fields[DAO_Domain::NAME] = 'New ' . $this->manifest->name;
+			}
+				
+			// Default the created date to now
+			if(!isset($fields[DAO_Domain::CREATED]))
+				$fields[DAO_Domain::CREATED] = time();
+				
+			// Create
+			$meta['object_id'] = DAO_Domain::create($fields);
+				
+		} else {
+			// Update
+			DAO_Domain::update($meta['object_id'], $fields);
+		}
+	
+		// Custom fields
+		if(!empty($custom_fields) && !empty($meta['object_id'])) {
+			DAO_CustomFieldValue::formatAndSetFieldValues($this->manifest->id, $meta['object_id'], $custom_fields, false, true, true); //$is_blank_unset (4th)
+		}
+	}	
 };
 
 class DAO_Domain extends C4_ORMHelper {
