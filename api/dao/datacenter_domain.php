@@ -13,7 +13,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		return array(
 			'id' => $domain->id,
 			'name' => $domain->name,
-			'permalink' => $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%d-%s",$context_id, $friendly), true),
+			'permalink' => $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%s-%d",$friendly,$context_id), true),
 		);
 	}
     
@@ -64,7 +64,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			
 			// URL
 			$url_writer = DevblocksPlatform::getUrlService();
-			$token_values['record_url'] = $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%d-%s",$domain->id, DevblocksPlatform::strToPermalink($domain->name)), true);
+			$token_values['record_url'] = $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%s-%d",DevblocksPlatform::strToPermalink($domain->name),$domain->id), true);
 			
 			// Addy
 			// [TODO]

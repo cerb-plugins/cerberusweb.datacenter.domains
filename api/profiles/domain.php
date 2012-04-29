@@ -26,9 +26,17 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		
 		$stack = $request->path;
 		@array_shift($stack); // profiles
-		@array_shift($stack); // calendar_event
-		@$id = intval(array_shift($stack));
-
+		@array_shift($stack); // domain
+		@$identifier = array_shift($stack);
+		
+		if(is_numeric($identifier)) {
+			$id = intval($identifier);
+		} elseif(preg_match("#.*?\-(\d+)$#", $identifier, $matches)) {
+			@$id = intval($matches[1]);
+		} else {
+			@$id = intval($identifier);
+		}
+		
 		if(is_numeric($id) && null != ($domain = DAO_Domain::get($id)))
 			$tpl->assign('domain', $domain);
 

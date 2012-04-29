@@ -40,7 +40,7 @@
 			</span>		
 
 			<!-- Macros -->
-			{devblocks_url assign=return_url full=true}c=profiles&type=domain&id={$page_context_id}-{$domain->name|devblocks_permalink}{/devblocks_url}
+			{devblocks_url assign=return_url full=true}c=profiles&type=domain&id={$domain->name|devblocks_permalink}-{$page_context_id}{/devblocks_url}
 			{include file="devblocks:cerberusweb.core::internal/macros/display/button.tpl" context=$page_context context_id=$page_context_id macros=$macros return_url=$return_url}		
 		
 			<!-- Edit -->
@@ -91,7 +91,7 @@
 			$popup = genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={$page_context}&context_id={$page_context_id}',null,false,'500');
 			$popup.one('datacenter_domain_save', function(event) {
 				event.stopPropagation();
-				document.location.href = '{devblocks_url}c=profiles&type=domain&id={$page_context_id}{/devblocks_url}';
+				document.location.href = '{devblocks_url}c=profiles&type=domain&id={$domain->name|devblocks_permalink}-{$page_context_id}{/devblocks_url}';
 			});
 		});
 		
