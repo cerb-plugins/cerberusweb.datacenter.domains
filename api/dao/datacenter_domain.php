@@ -1,19 +1,32 @@
 <?php
-class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextPeek, IDevblocksContextImport {
+class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextProfile, IDevblocksContextPeek, IDevblocksContextImport {
 	function getRandom() {
 		return DAO_Domain::random();
+	}
+	
+	function profileGetUrl($context_id) {
+		if(empty($context_id))
+			return '';
+	
+		$url_writer = DevblocksPlatform::getUrlService();
+		$url = $url_writer->writeNoProxy('c=profiles&type=domain&id='.$context_id, true);
+		return $url;
 	}
 	
 	function getMeta($context_id) {
 		$domain = DAO_Domain::get($context_id);
 		$url_writer = DevblocksPlatform::getUrlService();
 		
+		$url = $this->profileGetUrl($context_id);
 		$friendly = DevblocksPlatform::strToPermalink($domain->name);
+		
+		if(!empty($friendly))
+			$url .= '-' . $friendly;
 		
 		return array(
 			'id' => $domain->id,
 			'name' => $domain->name,
-			'permalink' => $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%s-%d",$friendly,$context_id), true),
+			'permalink' => $url,
 		);
 	}
     
