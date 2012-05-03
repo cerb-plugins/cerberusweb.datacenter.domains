@@ -1,7 +1,10 @@
 <?php
-if(class_exists('Extension_ServerTab', true)):
-class ChDomainsServerTab extends Extension_ServerTab {
-	function showTab(Model_Server $server) {
+if(class_exists('Extension_ContextProfileTab', true)):
+class ChDomainsServerTab extends Extension_ContextProfileTab {
+	function showTab($context, $context_id) {
+		if(0 != strcasecmp($context, CerberusContexts::CONTEXT_SERVER))
+			return;
+		
 		$tpl = DevblocksPlatform::getTemplateService();
 
 		// View
@@ -20,7 +23,7 @@ class ChDomainsServerTab extends Extension_ServerTab {
 			SearchFields_Domain::SERVER_ID,
 		), true);
 		$view->addParamsRequired(array(
-			SearchFields_Domain::SERVER_ID => new DevblocksSearchCriteria(SearchFields_Domain::SERVER_ID, '=', $server->id),
+			SearchFields_Domain::SERVER_ID => new DevblocksSearchCriteria(SearchFields_Domain::SERVER_ID, '=', $context_id),
 		), true);
 		
 		C4_AbstractViewLoader::setView($view_id, $view);

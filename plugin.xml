@@ -150,7 +150,7 @@
 		
 		<!-- Server Tab -->
 		
-		<extension point="cerberusweb.datacenter.server.tab">
+		<extension point="cerberusweb.ui.context.profile.tab">
 			<id>cerberusweb.datacenter.domains.server_tab</id>
 			<name>Domains Tab</name>
 			<class>
@@ -159,6 +159,11 @@
 			</class>
 			<params>
 				<param key="uri" value="domains" />
+				<param key="contexts">
+					<value>
+						<data key="cerberusweb.contexts.datacenter.server" />
+					</value>
+				</param>
 				<param key="title" value="cerberusweb.datacenter.domains" />
 			</params>
 		</extension>

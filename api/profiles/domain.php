@@ -52,10 +52,6 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		}
 		$tpl->assign('selected_tab', $selected_tab);
 		
-		$tab_manifests = DevblocksPlatform::getExtensions('cerberusweb.datacenter.domain.tab', false);
-		DevblocksPlatform::sortObjects($tab_manifests, 'name');
-		$tpl->assign('tab_manifests', $tab_manifests);
-
 		// Custom fields
 
 		$custom_fields = DAO_CustomField::getAll();
@@ -100,6 +96,11 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		$macros = DAO_TriggerEvent::getByOwner(CerberusContexts::CONTEXT_WORKER, $active_worker->id, 'event.macro.domain');
 		$tpl->assign('macros', $macros);
 
+		// Tabs
+		$tab_manifests = Extension_ContextProfileTab::getExtensions(false, CerberusContexts::CONTEXT_DOMAIN);
+		$tpl->assign('tab_manifests', $tab_manifests);
+		
+		// Template
 		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/profile.tpl');		
 	}
 };

@@ -15,38 +15,34 @@
 <fieldset class="properties">
 	<legend>{'cerberusweb.datacenter.domain'|devblocks_translate|capitalize}</legend>
 	
-	<form action="{devblocks_url}{/devblocks_url}" method="post" style="margin-bottom:5px;">
-
-		{foreach from=$properties item=v key=k name=props}
-			<div class="property">
-				{if $k == 'server'}
-					<b>{$v.label|capitalize}:</b>
-					<a href="javascript:;" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={CerberusContexts::CONTEXT_SERVER}&context_id={$domain->server_id}&view_id={$view->id}',null,false,'500');">{$v.server->name}</a>
-				{else}
-					{include file="devblocks:cerberusweb.core::internal/custom_fields/profile_cell_renderer.tpl"}
-				{/if}
-			</div>
-			{if $smarty.foreach.props.iteration % 3 == 0 && !$smarty.foreach.props.last}
-				<br clear="all">
+	{foreach from=$properties item=v key=k name=props}
+		<div class="property">
+			{if $k == 'server'}
+				<b>{$v.label|capitalize}:</b>
+				<a href="javascript:;" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={CerberusContexts::CONTEXT_SERVER}&context_id={$domain->server_id}&view_id={$view->id}',null,false,'500');">{$v.server->name}</a>
+			{else}
+				{include file="devblocks:cerberusweb.core::internal/custom_fields/profile_cell_renderer.tpl"}
 			{/if}
-		{/foreach}
-		<br clear="all">
-	
-		<!-- Toolbar -->
-		<div>
-			<span>
-			{$object_watchers = DAO_ContextLink::getContextLinks($page_context, array($page_context_id), CerberusContexts::CONTEXT_WORKER)}
-			{include file="devblocks:cerberusweb.core::internal/watchers/context_follow_button.tpl" context=$page_context context_id=$page_context_id full=true}
-			</span>		
-
-			<!-- Macros -->
-			{devblocks_url assign=return_url full=true}c=profiles&type=domain&id={$domain->name|devblocks_permalink}-{$page_context_id}{/devblocks_url}
-			{include file="devblocks:cerberusweb.core::internal/macros/display/button.tpl" context=$page_context context_id=$page_context_id macros=$macros return_url=$return_url}		
-		
-			<!-- Edit -->
-			<button type="button" id="btnDatacenterDomainEdit"><span class="cerb-sprite sprite-document_edit"></span> Edit</button>
 		</div>
+		{if $smarty.foreach.props.iteration % 3 == 0 && !$smarty.foreach.props.last}
+			<br clear="all">
+		{/if}
+	{/foreach}
+	<br clear="all">
 	
+	<form class="toolbar" action="{devblocks_url}{/devblocks_url}" method="post" style="margin-bottom:5px;">
+		<!-- Toolbar -->
+		<span>
+		{$object_watchers = DAO_ContextLink::getContextLinks($page_context, array($page_context_id), CerberusContexts::CONTEXT_WORKER)}
+		{include file="devblocks:cerberusweb.core::internal/watchers/context_follow_button.tpl" context=$page_context context_id=$page_context_id full=true}
+		</span>		
+
+		<!-- Macros -->
+		{devblocks_url assign=return_url full=true}c=profiles&type=domain&id={$domain->name|devblocks_permalink}-{$page_context_id}{/devblocks_url}
+		{include file="devblocks:cerberusweb.core::internal/macros/display/button.tpl" context=$page_context context_id=$page_context_id macros=$macros return_url=$return_url}		
+	
+		<!-- Edit -->
+		<button type="button" id="btnDatacenterDomainEdit"><span class="cerb-sprite sprite-document_edit"></span> Edit</button>
 	</form>
 	
 	{if $pref_keyboard_shortcuts}
@@ -74,6 +70,11 @@
 		<li><a href="{devblocks_url}ajax.php?c=internal&a=showTabActivityLog&scope=target&point={$point}&context=cerberusweb.contexts.datacenter.domain&context_id={$page_context_id}{/devblocks_url}">{'common.activity_log'|devblocks_translate|capitalize}</a></li>		
 		<li><a href="{devblocks_url}ajax.php?c=internal&a=showTabContextComments&context=cerberusweb.contexts.datacenter.domain&id={$page_context_id}&point={$point}{/devblocks_url}">{'common.comments'|devblocks_translate|capitalize}</a></li>
 		<li><a href="{devblocks_url}ajax.php?c=internal&a=showTabContextLinks&context=cerberusweb.contexts.datacenter.domain&id={$page_context_id}&point={$point}{/devblocks_url}">{'common.links'|devblocks_translate}</a></li>
+		
+		{foreach from=$tab_manifests item=tab_manifest}
+			{$tabs[] = $tab_manifest->params.uri}
+			<li><a href="{devblocks_url}ajax.php?c=profiles&a=showTab&ext_id={$tab_manifest->id}&point={$point}&context={$page_context}&context_id={$page_context_id}{/devblocks_url}"><i>{$tab_manifest->params.title|devblocks_translate}</i></a></li>
+		{/foreach}
 	</ul>
 </div> 
 <br>
@@ -148,3 +149,12 @@ $(document).keypress(function(event) {
 });
 {/if}
 </script>
+
+{$profile_scripts = Extension_ContextProfileScript::getExtensions(true, $page_context)}
+{if !empty($profile_scripts)}
+{foreach from=$profile_scripts item=renderer}
+	{if method_exists($renderer,'renderScript')}
+		{$renderer->renderScript($page_context, $page_context_id)}
+	{/if}
+{/foreach}
+{/if}
