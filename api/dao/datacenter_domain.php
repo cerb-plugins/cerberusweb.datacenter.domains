@@ -767,7 +767,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 			default:
 				// Custom fields
 				if('cf_' == substr($column,0,3)) {
-					$counts = $this->_getSubtotalCountForCustomColumn('DAO_Domain', $column, 'd.id');
+					$counts = $this->_getSubtotalCountForCustomColumn('DAO_Domain', $column, 'datacenter_domain.id');
 				}
 				
 				break;
