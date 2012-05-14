@@ -1,24 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.devblocks.com/schema/plugin.xsd">
 	<id>cerberusweb.datacenter.domains</id>
-	<name>Datacenter: Domain Manager</name>
-	<description>Management of webhosting/SaaS/On-Demand infrastructure</description>
+	<name>Domains</name>
+	<description>This plugin adds Domain objects for managing webhosting/SaaS/On-Demand infrastructure.</description>
 	<author>WebGroup Media, LLC.</author>
-	<version>1.0.5</version>
+	<version>1.0.6</version>
 	<link>https://github.com/cerb5-plugins/cerberusweb.datacenter.domains</link>
 	<image>plugin.png</image>
  
  	<!-- Requirements -->
 
 	<requires>
-		<app_version min="5.8" max="5.8.99" />
+		<app_version min="6.0" max="6.0.99" />
 	</requires>
  
 	<!-- Plugin Dependencies -->
 	
 	<dependencies>
-		<require plugin_id="cerberusweb.core" version="5.8.0-dev" />
-		<require plugin_id="cerberusweb.datacenter" version="5.8.0-dev" />
+		<require plugin_id="cerberusweb.core" version="6.0.0-dev" />
 	</dependencies>
 
 	<!-- Patches -->
