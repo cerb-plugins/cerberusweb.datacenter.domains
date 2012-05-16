@@ -515,14 +515,20 @@ class DAO_Domain extends C4_ORMHelper {
 		if(!is_a($param, 'DevblocksSearchCriteria'))
 			return;
 	
+		$from_context = 'cerberusweb.contexts.datacenter.domain';
+		$from_index = 'datacenter_domain.id';
+		
 		$param_key = $param->field;
 		settype($param_key, 'string');
+		
 		switch($param_key) {
+			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
+				$args['has_multiple_values'] = true;
+				self::_searchComponentsVirtualContextLinks($param, $from_context, $from_index, $args['join_sql'], $args['where_sql']);
+				break;
+			
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
 				$args['has_multiple_values'] = true;
-				$from_context = 'cerberusweb.contexts.datacenter.domain';
-				$from_index = 'datacenter_domain.id';
-				
 				self::_searchComponentsVirtualWatchers($param, $from_context, $from_index, $args['join_sql'], $args['where_sql']);
 				break;
 		}
@@ -602,6 +608,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 	const CREATED = 'w_created';
 	
 	// Virtuals
+	const VIRTUAL_CONTEXT_LINK = '*_context_link';
 	const VIRTUAL_WATCHERS = '*_workers';
 
 	// Context Links
@@ -623,6 +630,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 			self::SERVER_ID => new DevblocksSearchField(self::SERVER_ID, 'datacenter_domain', 'server_id', $translate->_('cerberusweb.datacenter.common.server')),
 			self::CREATED => new DevblocksSearchField(self::CREATED, 'datacenter_domain', 'created', $translate->_('common.created'), Model_CustomField::TYPE_DATE),
 			
+			self::VIRTUAL_CONTEXT_LINK => new DevblocksSearchField(self::VIRTUAL_CONTEXT_LINK, '*', 'context_link', $translate->_('common.links'), null),
 			self::VIRTUAL_WATCHERS => new DevblocksSearchField(self::VIRTUAL_WATCHERS, '*', 'workers', $translate->_('common.watchers'), 'WS'),
 			
 			self::CONTEXT_LINK => new DevblocksSearchField(self::CONTEXT_LINK, 'context_link', 'from_context', null),
@@ -677,12 +685,9 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		// Filter columns
 		$this->addColumnsHidden(array(
 			SearchFields_Domain::FULLTEXT_COMMENT_CONTENT,
+			SearchFields_Domain::VIRTUAL_CONTEXT_LINK,
 			SearchFields_Domain::VIRTUAL_WATCHERS,
 		));
-		
-		// Filter params
-		//$this->addParamsHidden(array(
-		//));
 		
 		$this->doResetCriteria();
 	}
@@ -831,6 +836,12 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__list.tpl');
 				break;
 				
+			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
+				$contexts = Extension_DevblocksContext::getAll(false);
+				$tpl->assign('contexts', $contexts);
+				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__context_link.tpl');
+				break;
+				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__context_worker.tpl');
 				break;
@@ -854,6 +865,10 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		$key = $param->field;
 		
 		switch($key) {
+			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
+				$this->_renderVirtualContextLinks($param);
+				break;
+			
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
 				$this->_renderVirtualWatchers($param);
 				break;
@@ -918,6 +933,11 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 			case SearchFields_Domain::SERVER_ID:
 				@$options = DevblocksPlatform::importGPC($_REQUEST['options'],'array',array());
 				$criteria = new DevblocksSearchCriteria($field,$oper,$options);
+				break;
+				
+			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
+				@$context_links = DevblocksPlatform::importGPC($_REQUEST['context_link'],'array',array());
+				$criteria = new DevblocksSearchCriteria($field,DevblocksSearchCriteria::OPER_IN,$context_links);
 				break;
 				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
