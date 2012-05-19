@@ -729,6 +729,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 					break;
 					
 				// Booleans
+				case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
 				case SearchFields_Domain::VIRTUAL_WATCHERS:
 					$pass = true;
 					break;
@@ -765,6 +766,10 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 				$counts = $this->_getSubtotalCountForStringColumn('DAO_Domain', $column, $label_map, 'in', 'server_id[]');
 				break;
 
+			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
+				$counts = $this->_getSubtotalCountForContextLinkColumn('DAO_Domain', CerberusContexts::CONTEXT_DOMAIN, $column);
+				break;
+				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
 				$counts = $this->_getSubtotalCountForWatcherColumn('DAO_Domain', $column);
 				break;
