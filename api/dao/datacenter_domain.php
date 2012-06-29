@@ -1045,11 +1045,14 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 				foreach($addresses as $address_id => $address) {
 					try {
 						CerberusContexts::getContext('cerberusweb.contexts.datacenter.domain', array('id'=>$domain_id,'address_id'=>$address_id), $tpl_labels, $tpl_tokens);
-						$subject = $tpl_builder->build($params['subject'], $tpl_tokens);
-						$body = $tpl_builder->build($params['message'], $tpl_tokens);
+						
+						$tpl_dict = new DevblocksDictionaryDelegate($tpl_tokens);
+						
+						$subject = $tpl_builder->build($params['subject'], $tpl_dict);
+						$body = $tpl_builder->build($params['message'], $tpl_dict);
 						
 						$json_params = array(
-							'to' => $tpl_tokens['contact_address'],
+							'to' => $tpl_dict->contact_address,
 							'group_id' => $params['group_id'],
 							'next_is_closed' => $next_is_closed,
 						);
@@ -1059,7 +1062,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 							DAO_MailQueue::TICKET_ID => 0,
 							DAO_MailQueue::WORKER_ID => $params['worker_id'],
 							DAO_MailQueue::UPDATED => time(),
-							DAO_MailQueue::HINT_TO => $tpl_tokens['contact_address'],
+							DAO_MailQueue::HINT_TO => $tpl_dict->contact_address,
 							DAO_MailQueue::SUBJECT => $subject,
 							DAO_MailQueue::BODY => $body,
 							DAO_MailQueue::PARAMS_JSON => json_encode($json_params),
