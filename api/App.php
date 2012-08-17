@@ -56,6 +56,7 @@ class Page_Domains extends CerberusPageExtension {
 		@$contact_address_ids = DevblocksPlatform::importGPC($_REQUEST['contact_address_id'],'array',array());
 		@$comment = DevblocksPlatform::importGPC($_REQUEST['comment'], 'string', '');
 		@$do_delete = DevblocksPlatform::importGPC($_REQUEST['do_delete'],'integer',0);
+		@$view_id = DevblocksPlatform::importGPC($_REQUEST['view_id'],'string','');
 		
 		if($do_delete) { // delete
 			DAO_Domain::delete($id);
@@ -77,6 +78,11 @@ class Page_Domains extends CerberusPageExtension {
 				@$is_watcher = DevblocksPlatform::importGPC($_REQUEST['is_watcher'],'integer',0);
 				if($is_watcher)
 					CerberusContexts::addWatchers('cerberusweb.contexts.datacenter.domain', $id, $active_worker->id);
+				
+				// View marquee
+				if(!empty($id) && !empty($view_id)) {
+					C4_AbstractView::setMarqueeContextCreated($view_id, 'cerberusweb.contexts.datacenter.domain', $id);
+				}
 				
 			} else {
 				DAO_Domain::update($id, $fields);

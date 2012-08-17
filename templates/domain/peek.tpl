@@ -1,6 +1,7 @@
 <form action="{devblocks_url}{/devblocks_url}" method="post" id="frmDatacenterDomain">
 <input type="hidden" name="c" value="datacenter.domains">
 <input type="hidden" name="a" value="saveDomainPeek">
+<input type="hidden" name="view_id" value="{$view_id}">
 {if !empty($model) && !empty($model->id)}<input type="hidden" name="id" value="{$model->id}">{/if}
 {if !empty($link_context)}
 <input type="hidden" name="link_context" value="{$link_context}">
