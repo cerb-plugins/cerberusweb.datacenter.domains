@@ -75,9 +75,10 @@ class Page_Domains extends CerberusPageExtension {
 			if(empty($id)) {
 				$id = DAO_Domain::create($fields);
 				
-				@$is_watcher = DevblocksPlatform::importGPC($_REQUEST['is_watcher'],'integer',0);
-				if($is_watcher)
-					CerberusContexts::addWatchers('cerberusweb.contexts.datacenter.domain', $id, $active_worker->id);
+				// Watchers
+				@$add_watcher_ids = DevblocksPlatform::sanitizeArray(DevblocksPlatform::importGPC($_REQUEST['add_watcher_ids'],'array',array()),'integer',array('unique','nonzero'));
+				if(!empty($add_watcher_ids))
+					CerberusContexts::addWatchers(CerberusContexts::CONTEXT_DOMAIN, $id, $add_watcher_ids);
 				
 				// View marquee
 				if(!empty($id) && !empty($view_id)) {
