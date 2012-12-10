@@ -3,7 +3,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 	protected $_event_id = null; // override
 
 	/**
-	 * 
+	 *
 	 * @param integer $domain_id
 	 * @return Model_DevblocksEvent
 	 */
@@ -36,7 +36,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				'domain_id' => $domain_id,
 			)
 		);
-	}	
+	}
 	
 	function setEvent(Model_DevblocksEvent $event_model=null) {
 		$labels = array();
@@ -46,10 +46,10 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		 * Domain
 		 */
 		
-		@$domain_id = $event_model->params['domain_id']; 
+		@$domain_id = $event_model->params['domain_id'];
 		$merge_labels = array();
 		$merge_values = array();
-		CerberusContexts::getContext('cerberusweb.contexts.datacenter.domain', $domain_id, $merge_labels, $merge_values, null, true);
+		CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, $domain_id, $merge_labels, $merge_values, null, true);
 
 			// Merge
 			CerberusContexts::merge(
@@ -66,7 +66,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		 */
 
 		$this->setLabels($labels);
-		$this->setValues($values);		
+		$this->setValues($values);
 	}
 	
 	function getValuesContexts($trigger) {
@@ -138,7 +138,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 
 		$conditions = $this->_importLabelsTypesAsConditions($labels, $types);
 		
-		return $conditions;		
+		return $conditions;
 	}
 	
 	function renderConditionExtension($token, $trigger, $params=array(), $seq=null) {
@@ -264,7 +264,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 	}
 	
 	function getActionExtensions() {
-		$actions = 
+		$actions =
 			array(
 				'add_watchers' => array('label' =>'Add watchers'),
 				'create_comment' => array('label' =>'Create a comment'),
@@ -275,7 +275,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				'set_links' => array('label' => 'Set links'),
 				'unschedule_behavior' => array('label' => 'Unschedule behavior'),
 			)
-			+ DevblocksEventHelper::getActionCustomFields('cerberusweb.contexts.datacenter.domain')
+			+ DevblocksEventHelper::getActionCustomFields(CerberusContexts::CONTEXT_DOMAIN)
 			;
 			
 		return $actions;
@@ -394,7 +394,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 					
 					// If different types of custom fields, need to find the proper context_id
 					switch($custom_field->context) {
-						case 'cerberusweb.contexts.datacenter.domain':
+						case CerberusContexts::CONTEXT_DOMAIN:
 							$context = $custom_field->context;
 							$context_id = $domain_id;
 							break;
@@ -403,9 +403,9 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 					if(!empty($context) && !empty($context_id))
 						return DevblocksEventHelper::simulateActionSetCustomField($custom_field, 'domain_custom', $params, $dict, $context, $context_id);
 				}
-				break;	
+				break;
 		}
-	}	
+	}
 	
 	function runActionExtension($token, $trigger, $params, DevblocksDictionaryDelegate $dict) {
 		@$domain_id = $dict->domain_id;
@@ -455,7 +455,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 					
 					// If different types of custom fields, need to find the proper context_id
 					switch($custom_field->context) {
-						case 'cerberusweb.contexts.datacenter.domain':
+						case CerberusContexts::CONTEXT_DOMAIN:
 							$context = $custom_field->context;
 							$context_id = $domain_id;
 							break;

@@ -101,6 +101,6 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		$tpl->assign('tab_manifests', $tab_manifests);
 		
 		// Template
-		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/profile.tpl');		
+		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/profile.tpl');
 	}
 };

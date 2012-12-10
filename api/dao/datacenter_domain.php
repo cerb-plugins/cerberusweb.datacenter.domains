@@ -29,7 +29,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			'permalink' => $url,
 		);
 	}
-    
+	
 	function getContext($id_map, &$token_labels, &$token_values, $prefix=null) {
 		$domain = null;
 
@@ -114,9 +114,9 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			$merge_token_values,
 			$token_labels,
 			$token_values
-		);		
+		);
 		
-		return true;		
+		return true;
 	}
 
 	function lazyLoadContextValues($token, $dictionary) {
@@ -150,7 +150,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		}
 		
 		return $values;
-	}	
+	}
 	
 	function getChooserView($view_id=null) {
 		if(empty($view_id))
@@ -171,14 +171,14 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$view->renderTemplate = 'contextlinks_chooser';
 		
 		C4_AbstractViewLoader::setView($view_id, $view);
-		return $view;		
+		return $view;
 	}
 	
 	function getView($context=null, $context_id=null, $options=array()) {
 		$view_id = str_replace('.','_',$this->id);
 		
 		$defaults = new C4_AbstractViewModel();
-		$defaults->id = $view_id; 
+		$defaults->id = $view_id;
 		$defaults->class_name = $this->getViewClass();
 		$view = C4_AbstractViewLoader::getView($view_id, $defaults);
 		
@@ -216,10 +216,10 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$tpl->assign('servers', $servers);
 		
 		// Custom fields
-		$custom_fields = DAO_CustomField::getByContext('cerberusweb.contexts.datacenter.domain'); 
+		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN);
 		$tpl->assign('custom_fields', $custom_fields);
 
-		$custom_field_values = DAO_CustomFieldValue::getValuesByContextIds('cerberusweb.contexts.datacenter.domain', $id);
+		$custom_field_values = DAO_CustomFieldValue::getValuesByContextIds(CerberusContexts::CONTEXT_DOMAIN, $id);
 		if(isset($custom_field_values[$id]))
 			$tpl->assign('custom_field_values', $custom_field_values[$id]);
 		
@@ -227,11 +227,11 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$tpl->assign('types', $types);
 		
 		// Context: Addresses
-		$context_addresses = Context_Address::searchInboundLinks('cerberusweb.contexts.datacenter.domain', $id);
+		$context_addresses = Context_Address::searchInboundLinks(CerberusContexts::CONTEXT_DOMAIN, $id);
 		$tpl->assignByRef('context_addresses', $context_addresses);
 		
 		// Comments
-		$comments = DAO_Comment::getByContext('cerberusweb.contexts.datacenter.domain', $id);
+		$comments = DAO_Comment::getByContext(CerberusContexts::CONTEXT_DOMAIN, $id);
 		$last_comment = array_shift($comments);
 		unset($comments);
 		$tpl->assign('last_comment', $last_comment);
@@ -309,7 +309,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		if(!empty($custom_fields) && !empty($meta['object_id'])) {
 			DAO_CustomFieldValue::formatAndSetFieldValues($this->manifest->id, $meta['object_id'], $custom_fields, false, true, true); //$is_blank_unset (4th)
 		}
-	}	
+	}
 };
 
 class DAO_Domain extends C4_ORMHelper {
@@ -331,10 +331,45 @@ class DAO_Domain extends C4_ORMHelper {
 	}
 	
 	static function update($ids, $fields) {
-		parent::_update($ids, 'datacenter_domain', $fields);
+		if(!is_array($ids))
+			$ids = array($ids);
 		
-	    // Log the context update
-   		DevblocksPlatform::markContextChanged(CerberusContexts::CONTEXT_DOMAIN, $ids);
+		// Make a diff for the requested objects in batches
+		
+		$chunks = array_chunk($ids, 100, true);
+		while($batch_ids = array_shift($chunks)) {
+			if(empty($batch_ids))
+				continue;
+			
+			// Get state before changes
+			$object_changes = parent::_getUpdateDeltas($batch_ids, $fields, get_class());
+
+			if(empty($object_changes))
+				continue;
+			
+			// Make changes
+			parent::_update($batch_ids, 'datacenter_domain', $fields);
+			
+			// Send events
+			if(!empty($object_changes)) {
+				// Local events
+				//self::_processUpdateEvents($object_changes);
+				
+				// Trigger an event about the changes
+				$eventMgr = DevblocksPlatform::getEventService();
+				$eventMgr->trigger(
+					new Model_DevblocksEvent(
+						'dao.domain.update',
+						array(
+							'objects' => $object_changes,
+						)
+					)
+				);
+				
+				// Log the context update
+				DevblocksPlatform::markContextChanged(CerberusContexts::CONTEXT_DOMAIN, $batch_ids);
+			}
+		}
 	}
 	
 	static function updateWhere($fields, $where) {
@@ -413,33 +448,33 @@ class DAO_Domain extends C4_ORMHelper {
 		$db->Execute(sprintf("DELETE FROM datacenter_domain WHERE id IN (%s)", $ids_list));
 		
 		// Fire event
-	    $eventMgr = DevblocksPlatform::getEventService();
-	    $eventMgr->trigger(
-	        new Model_DevblocksEvent(
-	            'context.delete',
-                array(
-                	'context' => 'cerberusweb.contexts.datacenter.domain',
-                	'context_ids' => $ids
-                )
-            )
-	    );
+		$eventMgr = DevblocksPlatform::getEventService();
+		$eventMgr->trigger(
+			new Model_DevblocksEvent(
+				'context.delete',
+				array(
+					'context' => CerberusContexts::CONTEXT_DOMAIN,
+					'context_ids' => $ids
+				)
+			)
+		);
 		
 		return true;
 	}
 	
 	public static function maint() {
 		// Fire event
-	    $eventMgr = DevblocksPlatform::getEventService();
-	    $eventMgr->trigger(
-	        new Model_DevblocksEvent(
-	            'context.maint',
-                array(
-                	'context' => 'cerberusweb.contexts.datacenter.domain',
-                	'context_table' => 'datacenter_domain',
-                	'context_key' => 'id',
-                )
-            )
-	    );
+		$eventMgr = DevblocksPlatform::getEventService();
+		$eventMgr->trigger(
+			new Model_DevblocksEvent(
+				'context.maint',
+				array(
+					'context' => CerberusContexts::CONTEXT_DOMAIN,
+					'context_table' => 'datacenter_domain',
+					'context_key' => 'id',
+				)
+			)
+		);
 	}
 	
 	public static function random() {
@@ -453,7 +488,7 @@ class DAO_Domain extends C4_ORMHelper {
 		if('*'==substr($sortBy,0,1) || !isset($fields[$sortBy]))
 			$sortBy=null;
 
-        list($tables, $wheres) = parent::_parseSearchParams($params, $columns, $fields, $sortBy);
+		list($tables, $wheres) = parent::_parseSearchParams($params, $columns, $fields, $sortBy);
 		
 		$select_sql = sprintf("SELECT ".
 			"datacenter_domain.id as %s, ".
@@ -511,13 +546,13 @@ class DAO_Domain extends C4_ORMHelper {
 		);
 		
 		return $result;
-	}	
+	}
 	
 	private static function _translateVirtualParameters($param, $key, &$args) {
 		if(!is_a($param, 'DevblocksSearchCriteria'))
 			return;
 	
-		$from_context = 'cerberusweb.contexts.datacenter.domain';
+		$from_context = CerberusContexts::CONTEXT_DOMAIN;
 		$from_index = 'datacenter_domain.id';
 		
 		$param_key = $param->field;
@@ -536,19 +571,19 @@ class DAO_Domain extends C4_ORMHelper {
 		}
 	}
 	
-    /**
-     * Enter description here...
-     *
-     * @param array $columns
-     * @param DevblocksSearchCriteria[] $params
-     * @param integer $limit
-     * @param integer $page
-     * @param string $sortBy
-     * @param boolean $sortAsc
-     * @param boolean $withCounts
-     * @return array
-     */
-    static function search($columns, $params, $limit=10, $page=0, $sortBy=null, $sortAsc=null, $withCounts=true) {
+	/**
+	 * Enter description here...
+	 *
+	 * @param array $columns
+	 * @param DevblocksSearchCriteria[] $params
+	 * @param integer $limit
+	 * @param integer $page
+	 * @param string $sortBy
+	 * @param boolean $sortAsc
+	 * @param boolean $withCounts
+	 * @return array
+	 */
+	static function search($columns, $params, $limit=10, $page=0, $sortBy=null, $sortAsc=null, $withCounts=true) {
 		$db = DevblocksPlatform::getDatabaseService();
 
 		// Build search queries
@@ -560,7 +595,7 @@ class DAO_Domain extends C4_ORMHelper {
 		$has_multiple_values = $query_parts['has_multiple_values'];
 		$sort_sql = $query_parts['sort'];
 		
-		$sql = 
+		$sql =
 			$select_sql.
 			$join_sql.
 			$where_sql.
@@ -569,10 +604,10 @@ class DAO_Domain extends C4_ORMHelper {
 			
 		// [TODO] Could push the select logic down a level too
 		if($limit > 0) {
-    		$rs = $db->SelectLimit($sql,$limit,$page*$limit) or die(__CLASS__ . '('.__LINE__.')'. ':' . $db->ErrorMsg()); /* @var $rs ADORecordSet */
+			$rs = $db->SelectLimit($sql,$limit,$page*$limit) or die(__CLASS__ . '('.__LINE__.')'. ':' . $db->ErrorMsg()); /* @var $rs ADORecordSet */
 		} else {
-		    $rs = $db->Execute($sql) or die(__CLASS__ . '('.__LINE__.')'. ':' . $db->ErrorMsg()); /* @var $rs ADORecordSet */
-            $total = mysql_num_rows($rs);
+			$rs = $db->Execute($sql) or die(__CLASS__ . '('.__LINE__.')'. ':' . $db->ErrorMsg()); /* @var $rs ADORecordSet */
+			$total = mysql_num_rows($rs);
 		}
 		
 		$results = array();
@@ -589,7 +624,7 @@ class DAO_Domain extends C4_ORMHelper {
 
 		// [JAS]: Count all
 		if($withCounts) {
-			$count_sql = 
+			$count_sql =
 				($has_multiple_values ? "SELECT COUNT(DISTINCT datacenter_domain.id) " : "SELECT COUNT(datacenter_domain.id) ").
 				$join_sql.
 				$where_sql;
@@ -645,7 +680,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 		}
 		
 		// Custom Fields
-		$fields = DAO_CustomField::getByContext('cerberusweb.contexts.datacenter.domain');
+		$fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN);
 
 		if(is_array($fields))
 		foreach($fields as $field_id => $field) {
@@ -656,7 +691,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 		// Sort by label (translation-conscious)
 		DevblocksPlatform::sortObjects($columns, 'db_label');
 
-		return $columns;		
+		return $columns;
 	}
 };
 
@@ -786,7 +821,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		}
 		
 		return $counts;
-	}	
+	}
 	
 	function render() {
 		$this->_sanitize();
@@ -796,7 +831,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		$tpl->assign('view', $this);
 
 		// Custom fields
-		$custom_fields = DAO_CustomField::getByContext('cerberusweb.contexts.datacenter.domain');
+		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN);
 		$tpl->assign('custom_fields', $custom_fields);
 		
 		switch($this->renderTemplate) {
@@ -880,7 +915,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 				$this->_renderVirtualWatchers($param);
 				break;
 		}
-	}	
+	}
 	
 	function renderCriteriaParam($param) {
 		$field = $param->field;
@@ -1028,25 +1063,25 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 			
 			$params = $do['broadcast'];
 			if(
-				!isset($params['worker_id']) 
+				!isset($params['worker_id'])
 				|| empty($params['worker_id'])
-				|| !isset($params['subject']) 
+				|| !isset($params['subject'])
 				|| empty($params['subject'])
-				|| !isset($params['message']) 
+				|| !isset($params['message'])
 				|| empty($params['message'])
 				)
 				break;
 
-			$is_queued = (isset($params['is_queued']) && $params['is_queued']) ? true : false; 
-			$next_is_closed = (isset($params['next_is_closed'])) ? intval($params['next_is_closed']) : 0; 
+			$is_queued = (isset($params['is_queued']) && $params['is_queued']) ? true : false;
+			$next_is_closed = (isset($params['next_is_closed'])) ? intval($params['next_is_closed']) : 0;
 			
 			if(is_array($ids))
 			foreach($ids as $domain_id) {
-				$addresses = Context_Address::searchInboundLinks('cerberusweb.contexts.datacenter.domain', $domain_id);
+				$addresses = Context_Address::searchInboundLinks(CerberusContexts::CONTEXT_DOMAIN, $domain_id);
 				
 				foreach($addresses as $address_id => $address) {
 					try {
-						CerberusContexts::getContext('cerberusweb.contexts.datacenter.domain', array('id'=>$domain_id,'address_id'=>$address_id), $tpl_labels, $tpl_tokens);
+						CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, array('id'=>$domain_id,'address_id'=>$address_id), $tpl_labels, $tpl_tokens);
 						
 						$tpl_dict = new DevblocksDictionaryDelegate($tpl_tokens);
 						
@@ -1058,6 +1093,9 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 							'group_id' => $params['group_id'],
 							'next_is_closed' => $next_is_closed,
 							'is_broadcast' => 1,
+							'context_links' => array(
+								array(CerberusContexts::CONTEXT_DOMAIN, $domain_id),
+							),
 						);
 						
 						$fields = array(
@@ -1082,7 +1120,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 					}
 				}
 			}
-		}		
+		}
 		
 		$batch_total = count($ids);
 		for($x=0;$x<=$batch_total;$x+=100) {
@@ -1091,7 +1129,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 				DAO_Domain::update($batch_ids, $change_fields);
 	
 				// Custom Fields
-				self::_doBulkSetCustomFields('cerberusweb.contexts.datacenter.domain', $custom_fields, $batch_ids);
+				self::_doBulkSetCustomFields(CerberusContexts::CONTEXT_DOMAIN, $custom_fields, $batch_ids);
 				
 				// Scheduled behavior
 				if(isset($do['behavior']) && is_array($do['behavior'])) {
@@ -1103,7 +1141,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 					foreach($batch_ids as $batch_id) {
 						DAO_ContextScheduledBehavior::create(array(
 							DAO_ContextScheduledBehavior::BEHAVIOR_ID => $behavior_id,
-							DAO_ContextScheduledBehavior::CONTEXT => 'cerberusweb.contexts.datacenter.domain',
+							DAO_ContextScheduledBehavior::CONTEXT => CerberusContexts::CONTEXT_DOMAIN,
 							DAO_ContextScheduledBehavior::CONTEXT_ID => $batch_id,
 							DAO_ContextScheduledBehavior::RUN_DATE => $behavior_when,
 							DAO_ContextScheduledBehavior::VARIABLES_JSON => json_encode($behavior_params),
@@ -1118,6 +1156,6 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		}
 
 		unset($ids);
-	}			
+	}
 };
 

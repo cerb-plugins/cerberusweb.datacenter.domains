@@ -82,7 +82,7 @@ class Page_Domains extends CerberusPageExtension {
 				
 				// View marquee
 				if(!empty($id) && !empty($view_id)) {
-					C4_AbstractView::setMarqueeContextCreated($view_id, 'cerberusweb.contexts.datacenter.domain', $id);
+					C4_AbstractView::setMarqueeContextCreated($view_id, CerberusContexts::CONTEXT_DOMAIN, $id);
 				}
 				
 			} else {
@@ -95,7 +95,7 @@ class Page_Domains extends CerberusPageExtension {
 				
 				$fields = array(
 					DAO_Comment::CREATED => time(),
-					DAO_Comment::CONTEXT => 'cerberusweb.contexts.datacenter.domain',
+					DAO_Comment::CONTEXT => CerberusContexts::CONTEXT_DOMAIN,
 					DAO_Comment::CONTEXT_ID => $id,
 					DAO_Comment::COMMENT => $comment,
 					DAO_Comment::ADDRESS_ID => $active_worker->getAddress()->id,
@@ -112,10 +112,10 @@ class Page_Domains extends CerberusPageExtension {
 			
 			// Custom field saves
 			@$field_ids = DevblocksPlatform::importGPC($_POST['field_ids'], 'array', array());
-			DAO_CustomFieldValue::handleFormPost('cerberusweb.contexts.datacenter.domain', $id, $field_ids);
+			DAO_CustomFieldValue::handleFormPost(CerberusContexts::CONTEXT_DOMAIN, $id, $field_ids);
 			
 			// Address context links
-			DAO_ContextLink::setContextOutboundLinks('cerberusweb.contexts.datacenter.domain', $id, CerberusContexts::CONTEXT_ADDRESS, $contact_address_ids);
+			DAO_ContextLink::setContextOutboundLinks(CerberusContexts::CONTEXT_DOMAIN, $id, CerberusContexts::CONTEXT_ADDRESS, $contact_address_ids);
 		}
 		
 	}
@@ -129,21 +129,21 @@ class Page_Domains extends CerberusPageExtension {
 		$tpl = DevblocksPlatform::getTemplateService();
 		$tpl->assign('view_id', $view_id);
 
-	    if(!empty($ids)) {
-	        $id_list = DevblocksPlatform::parseCsvString($ids);
-	        $tpl->assign('ids', implode(',', $id_list));
-	    }
+		if(!empty($ids)) {
+			$id_list = DevblocksPlatform::parseCsvString($ids);
+			$tpl->assign('ids', implode(',', $id_list));
+		}
 		
-   		// Groups
+		// Groups
 		$groups = DAO_Group::getAll();
 		$tpl->assign('groups', $groups);
 		
 		// Custom Fields
-		$custom_fields = DAO_CustomField::getByContext('cerberusweb.contexts.datacenter.domain');
+		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN);
 		$tpl->assign('custom_fields', $custom_fields);
 		
 		// Broadcast
-		CerberusContexts::getContext('cerberusweb.contexts.datacenter.domain', null, $token_labels, $token_values);
+		CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, null, $token_labels, $token_values);
 		$tpl->assign('token_labels', $token_labels);
 		
 		// Macros
@@ -157,10 +157,10 @@ class Page_Domains extends CerberusPageExtension {
 		$active_worker = CerberusApplication::getActiveWorker();
 		
 		// Filter: whole list or check
-	    @$filter = DevblocksPlatform::importGPC($_REQUEST['filter'],'string','');
+		@$filter = DevblocksPlatform::importGPC($_REQUEST['filter'],'string','');
 		$ids = array();
-	    
-	    // View
+	
+		// View
 		@$view_id = DevblocksPlatform::importGPC($_REQUEST['view_id'],'string');
 		$view = C4_AbstractViewLoader::getView($view_id);
 		
@@ -178,15 +178,15 @@ class Page_Domains extends CerberusPageExtension {
 			
 //		// Watchers
 //		$watcher_params = array();
-//		
+//
 //		@$watcher_add_ids = DevblocksPlatform::importGPC($_REQUEST['do_watcher_add_ids'],'array',array());
 //		if(!empty($watcher_add_ids))
 //			$watcher_params['add'] = $watcher_add_ids;
-//			
+//
 //		@$watcher_remove_ids = DevblocksPlatform::importGPC($_REQUEST['do_watcher_remove_ids'],'array',array());
 //		if(!empty($watcher_remove_ids))
 //			$watcher_params['remove'] = $watcher_remove_ids;
-//		
+//
 //		if(!empty($watcher_params))
 //			$do['watchers'] = $watcher_params;
 		
@@ -221,7 +221,7 @@ class Page_Domains extends CerberusPageExtension {
 					'worker_id' => $active_worker->id,
 				);
 			}
-		}		
+		}
 		
 		// Do: Custom fields
 		$do = DAO_CustomFieldValue::handleBulkPost($do);
@@ -238,7 +238,7 @@ class Page_Domains extends CerberusPageExtension {
 		switch($filter) {
 			// Checked rows
 			case 'checks':
-			    @$ids_str = DevblocksPlatform::importGPC($_REQUEST['ids'],'string');
+			@$ids_str = DevblocksPlatform::importGPC($_REQUEST['ids'],'string');
 				$ids = DevblocksPlatform::parseCsvString($ids_str);
 				break;
 			case 'sample':
@@ -253,7 +253,7 @@ class Page_Domains extends CerberusPageExtension {
 		$view->doBulkUpdate($filter, $do, $ids);
 		
 		$view->render();
-		return;		
+		return;
 	}
 	
 	function doBulkUpdateBroadcastTestAction() {
@@ -287,7 +287,7 @@ class Page_Domains extends CerberusPageExtension {
 			} else {
 				try {
 					// Pull one of the addresses on this row
-					$addresses = Context_Address::searchInboundLinks('cerberusweb.contexts.datacenter.domain', current($results));
+					$addresses = Context_Address::searchInboundLinks(CerberusContexts::CONTEXT_DOMAIN, current($results));
 					
 					if(empty($addresses)) {
 						$success = false;
@@ -299,7 +299,7 @@ class Page_Domains extends CerberusPageExtension {
 					@$addy = DAO_Address::get(array_rand($addresses, 1));
 	
 					// Try to build the template
-					CerberusContexts::getContext('cerberusweb.contexts.datacenter.domain', array('id'=>current($results),'address_id'=>$addy->id), $token_labels, $token_values);
+					CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, array('id'=>current($results),'address_id'=>$addy->id), $token_labels, $token_values);
 	
 					if(empty($broadcast_subject)) {
 						$success = false;
@@ -339,7 +339,7 @@ class Page_Domains extends CerberusPageExtension {
 		$url_writer = DevblocksPlatform::getUrlService();
 		
 		// Generate hash
-		$hash = md5($view_id.$active_worker->id.time()); 
+		$hash = md5($view_id.$active_worker->id.time());
 		
 		// Loop through view and get IDs
 		$view = C4_AbstractViewLoader::getView($view_id);
@@ -373,7 +373,7 @@ class Page_Domains extends CerberusPageExtension {
 					'return_url' => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : $url_writer->writeNoProxy('c=search&type=domain', true),
 //					'toolbar_extension_id' => 'cerberusweb.explorer.toolbar.',
 				);
-				$models[] = $model; 
+				$models[] = $model;
 				
 				$view->renderTotal = false; // speed up subsequent pages
 			}
@@ -390,7 +390,7 @@ class Page_Domains extends CerberusPageExtension {
 					'id' => $id,
 					'url' => $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%s-%d", DevblocksPlatform::strToPermalink($row[SearchFields_Domain::NAME]), $id), true),
 				);
-				$models[] = $model; 
+				$models[] = $model;
 			}
 			
 			DAO_ExplorerSet::createFromModels($models);
@@ -400,7 +400,7 @@ class Page_Domains extends CerberusPageExtension {
 		} while(!empty($results));
 		
 		DevblocksPlatform::redirect(new DevblocksHttpResponse(array('explore',$hash,$orig_pos)));
-	}	
+	}
 };
 
 if (class_exists('DevblocksEventListenerExtension')):
