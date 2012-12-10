@@ -55,6 +55,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			'created|date' => $prefix.$translate->_('common.created'),
 			'name' => $prefix.$translate->_('common.name'),
 			'record_url' => $prefix.$translate->_('common.url.record'),
+			'contacts_list' => $prefix.'Contacts List',
 		);
 		
 		if(is_array($fields))
@@ -78,9 +79,6 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			// URL
 			$url_writer = DevblocksPlatform::getUrlService();
 			$token_values['record_url'] = $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%s-%d",DevblocksPlatform::strToPermalink($domain->name),$domain->id), true);
-			
-			// Addy
-			// [TODO]
 			
 			// Server
 			$server_id = (null != $domain && !empty($domain->server_id)) ? $domain->server_id : null;
@@ -156,6 +154,19 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 				
 				$values[$token] = $contacts;
 				break;
+				
+			case 'contacts_list':
+				$result = $this->lazyLoadContextValues('contacts', $dictionary);
+				$contacts = array();
+				
+				if(isset($result['contacts']))
+				foreach($result['contacts'] as $contact) {
+					$contacts[] = $contact['address'];
+				}
+				
+				$values[$token] = implode(', ', $contacts);
+				break;
+			
 			case 'watchers':
 				$watchers = array(
 					$token => CerberusContexts::getWatchers($context, $context_id, true),
