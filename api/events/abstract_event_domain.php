@@ -75,6 +75,10 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				'label' => 'Domain',
 				'context' => CerberusContexts::CONTEXT_DOMAIN,
 			),
+			'domain_contacts' => array(
+				'label' => 'Domain contacts',
+				'context' => CerberusContexts::CONTEXT_ADDRESS,
+			),
 			'domain_watchers' => array(
 				'label' => 'Domain watchers',
 				'context' => CerberusContexts::CONTEXT_WORKER,

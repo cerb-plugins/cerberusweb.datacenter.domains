@@ -134,6 +134,28 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		}
 		
 		switch($token) {
+			case 'contacts':
+				$contacts = array();
+				$address_links = DAO_ContextLink::getContextLinks($context, $context_id, CerberusContexts::CONTEXT_ADDRESS);
+
+				if(!is_array($address_links))
+					break;
+				
+				// The results are keyed by source ID
+				$address_links = array_shift($address_links);
+				
+				if(is_array($address_links))
+				foreach($address_links as $address_link) { /* @var $address_link Model_ContextLink */
+					$token_labels = array();
+					$token_values = array();
+					CerberusContexts::getContext($address_link->context, $address_link->context_id, $token_labels, $token_values);
+					
+					if(!empty($token_values))
+						$contacts[$address_link->context_id] = $token_values;
+				}
+				
+				$values[$token] = $contacts;
+				break;
 			case 'watchers':
 				$watchers = array(
 					$token => CerberusContexts::getWatchers($context, $context_id, true),
