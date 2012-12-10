@@ -107,6 +107,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		$labels['domain_link'] = 'Domain is linked';
 		$labels['domain_server_link'] = 'Server is linked';
 		
+		$labels['domain_contacts_count'] = 'Domain contacts count';
 		$labels['domain_server_watcher_count'] = 'Server watcher count';
 		$labels['domain_watcher_count'] = 'Domain watcher count';
 		
@@ -136,6 +137,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 			'domain_link' => null,
 			'domain_server_link' => null,
 		
+			'domain_contacts_count' => null,
 			'domain_server_watcher_count' => null,
 			'domain_watcher_count' => null,
 		);
@@ -160,6 +162,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				$tpl->display('devblocks:cerberusweb.core::events/condition_link.tpl');
 				break;
 				
+			case 'domain_contacts_count':
 			case 'domain_server_watcher_count':
 			case 'domain_watcher_count':
 				$tpl->display('devblocks:cerberusweb.core::internal/decisions/conditions/_number.tpl');
@@ -223,6 +226,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				
 				break;
 				
+			case 'domain_contacts_count':
 			case 'domain_server_watcher_count':
 			case 'domain_watcher_count':
 				$not = (substr($params['oper'],0,1) == '!');
@@ -234,6 +238,9 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 						break;
 					case 'domain_contact_watcher_count':
 						$value = count($dict->domain_contact_watchers);
+						break;
+					case 'domain_contacts_count':
+						$value = count($dict->domain_contacts);
 						break;
 					case 'domain_server_watcher_count':
 						$value = count($dict->domain_server_watchers);
