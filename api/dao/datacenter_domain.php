@@ -1111,6 +1111,9 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 				
 				foreach($addresses as $address_id => $address) {
 					try {
+						if($address[SearchFields_Address::IS_DEFUNCT])
+							continue;
+						
 						CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, array('id'=>$domain_id,'address_id'=>$address_id), $tpl_labels, $tpl_tokens);
 						
 						$tpl_dict = new DevblocksDictionaryDelegate($tpl_tokens);
