@@ -64,7 +64,7 @@
 		<br>
 		<button type="button" onclick="ajax.chooserSnippet('snippets',$('#bulkDatacenterDomainBroadcast textarea[name=broadcast_message]'), { 'cerberusweb.contexts.datacenter.domain':'', '{CerberusContexts::CONTEXT_WORKER}':'{$active_worker->id}' });">{'common.snippets'|devblocks_translate|capitalize}</button>
 		<button type="button" onclick="genericAjaxPost('formBatchUpdate','bulkDatacenterDomainBroadcastTest','c=datacenter.domains&a=doBulkUpdateBroadcastTest');"><span class="cerb-sprite2 sprite-gear"></span> Test</button><!--
-		--><select onchange="insertAtCursor(this.form.broadcast_message,this.options[this.selectedIndex].value);this.selectedIndex=0;this.form.broadcast_message.focus();">
+		--><select class="insert-placeholders">
 			<option value="">-- insert at cursor --</option>
 			{foreach from=$token_labels key=k item=v}
 			<option value="{literal}{{{/literal}{$k}{literal}}}{/literal}">{$v}</option>
@@ -91,6 +91,21 @@
 <script type="text/javascript">
 	$popup = genericAjaxPopupFetch('peek');
 	$popup.one('popup_open', function(event,ui) {
-		$(this).dialog('option','title',"{$translate->_('common.bulk_update')|capitalize}");
-	} );
+		var $this = $(this);
+		$this.dialog('option','title',"{$translate->_('common.bulk_update')|capitalize}");
+		
+		$this.find('select.insert-placeholders').change(function(e) {
+			var $select = $(this);
+			var $val = $select.val();
+			
+			if($val.length == 0)
+				return;
+			
+			var $textarea = $select.siblings('textarea[name=broadcast_message]');
+			
+			$textarea.insertAtCursor($val).focus();
+			
+			$select.val('');
+		});
+	});
 </script>
