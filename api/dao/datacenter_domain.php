@@ -345,7 +345,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 	}
 };
 
-class DAO_Domain extends C4_ORMHelper {
+class DAO_Domain extends Cerb_ORMHelper {
 	const ID = 'id';
 	const NAME = 'name';
 	const SERVER_ID = 'server_id';
