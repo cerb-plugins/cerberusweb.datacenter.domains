@@ -52,11 +52,6 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		}
 		$tpl->assign('selected_tab', $selected_tab);
 		
-		// Custom fields
-
-		$custom_fields = DAO_CustomField::getAll();
-		$tpl->assign('custom_fields', $custom_fields);
-
 		// Properties
 
 		$properties = array();
@@ -77,21 +72,25 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 			'value' => $domain->created,
 		);
 
-		@$values = array_shift(DAO_CustomFieldValue::getValuesByContextIds('cerberusweb.contexts.datacenter.domain', $domain->id)) or array();
+		// Custom Fields
 
-		foreach($custom_fields as $cf_id => $cfield) {
-			if(!isset($values[$cf_id]))
-				continue;
+		@$values = array_shift(DAO_CustomFieldValue::getValuesByContextIds(CerberusContexts::CONTEXT_DOMAIN, $domain->id)) or array();
+		$tpl->assign('custom_field_values', $values);
+		
+		$properties_cfields = Page_Profiles::getProfilePropertiesCustomFields(CerberusContexts::CONTEXT_DOMAIN, $values);
+		
+		if(!empty($properties_cfields))
+			$properties = array_merge($properties, $properties_cfields);
+		
+		// Custom Field Groups
 
-			$properties['cf_' . $cf_id] = array(
-				'label' => $cfield->name,
-				'type' => $cfield->type,
-				'value' => $values[$cf_id],
-			);
-		}
-
+		$properties_custom_field_groups = Page_Profiles::getProfilePropertiesCustomFieldSets(CerberusContexts::CONTEXT_DOMAIN, $domain->id, $values);
+		$tpl->assign('properties_custom_field_groups', $properties_custom_field_groups);
+		
+		// Properties
+		
 		$tpl->assign('properties', $properties);
-
+		
 		// Macros
 		$macros = DAO_TriggerEvent::getByOwner(CerberusContexts::CONTEXT_WORKER, $active_worker->id, 'event.macro.domain');
 		$tpl->assign('macros', $macros);

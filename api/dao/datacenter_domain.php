@@ -249,7 +249,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$tpl->assign('servers', $servers);
 		
 		// Custom fields
-		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN);
+		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN, false);
 		$tpl->assign('custom_fields', $custom_fields);
 
 		$custom_field_values = DAO_CustomFieldValue::getValuesByContextIds(CerberusContexts::CONTEXT_DOMAIN, $id);
