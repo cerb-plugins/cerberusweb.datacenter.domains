@@ -140,7 +140,7 @@ class Page_Domains extends CerberusPageExtension {
 		$tpl->assign('groups', $groups);
 		
 		// Custom Fields
-		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN);
+		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN, false);
 		$tpl->assign('custom_fields', $custom_fields);
 		
 		// Broadcast

@@ -58,11 +58,10 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			'contacts_list' => $prefix.'Contacts List',
 		);
 		
-		if(is_array($fields))
-		foreach($fields as $cf_id => $field) {
-			$token_labels['custom_'.$cf_id] = $prefix.$field->name;
-		}
-
+		// Custom field/fieldset token labels
+		if(false !== ($custom_field_labels = $this->_getTokenLabelsFromCustomFields($fields, $prefix)) && is_array($custom_field_labels))
+			$token_labels = array_merge($token_labels, $custom_field_labels);
+		
 		// Token values
 		$token_values = array();
 		
@@ -594,6 +593,10 @@ class DAO_Domain extends Cerb_ORMHelper {
 				$args['has_multiple_values'] = true;
 				self::_searchComponentsVirtualContextLinks($param, $from_context, $from_index, $args['join_sql'], $args['where_sql']);
 				break;
+				
+			case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
+				self::_searchComponentsVirtualHasFieldset($param, $from_context, $from_index, $args['join_sql'], $args['where_sql']);
+				break;
 			
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
 				$args['has_multiple_values'] = true;
@@ -677,6 +680,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 	
 	// Virtuals
 	const VIRTUAL_CONTEXT_LINK = '*_context_link';
+	const VIRTUAL_HAS_FIELDSET = '*_has_fieldset';
 	const VIRTUAL_WATCHERS = '*_workers';
 
 	// Context Links
@@ -699,6 +703,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 			self::CREATED => new DevblocksSearchField(self::CREATED, 'datacenter_domain', 'created', $translate->_('common.created'), Model_CustomField::TYPE_DATE),
 			
 			self::VIRTUAL_CONTEXT_LINK => new DevblocksSearchField(self::VIRTUAL_CONTEXT_LINK, '*', 'context_link', $translate->_('common.links'), null),
+			self::VIRTUAL_HAS_FIELDSET => new DevblocksSearchField(self::VIRTUAL_HAS_FIELDSET, '*', 'has_fieldset', $translate->_('common.fieldset'), null),
 			self::VIRTUAL_WATCHERS => new DevblocksSearchField(self::VIRTUAL_WATCHERS, '*', 'workers', $translate->_('common.watchers'), 'WS'),
 			
 			self::CONTEXT_LINK => new DevblocksSearchField(self::CONTEXT_LINK, 'context_link', 'from_context', null),
@@ -710,14 +715,14 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 			$columns[self::FULLTEXT_COMMENT_CONTENT] = new DevblocksSearchField(self::FULLTEXT_COMMENT_CONTENT, 'ftcc', 'content', $translate->_('comment.filters.content'), 'FT');
 		}
 		
-		// Custom Fields
-		$fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN);
-
-		if(is_array($fields))
-		foreach($fields as $field_id => $field) {
-			$key = 'cf_'.$field_id;
-			$columns[$key] = new DevblocksSearchField($key,$key,'field_value',$field->name,$field->type);
-		}
+		// Custom fields with fieldsets
+		
+		$custom_columns = DevblocksSearchField::getCustomSearchFieldsByContexts(array(
+			CerberusContexts::CONTEXT_DOMAIN,
+		));
+		
+		if(is_array($custom_columns))
+			$columns = array_merge($columns, $custom_columns);
 		
 		// Sort by label (translation-conscious)
 		DevblocksPlatform::sortObjects($columns, 'db_label');
@@ -754,6 +759,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		$this->addColumnsHidden(array(
 			SearchFields_Domain::FULLTEXT_COMMENT_CONTENT,
 			SearchFields_Domain::VIRTUAL_CONTEXT_LINK,
+			SearchFields_Domain::VIRTUAL_HAS_FIELDSET,
 			SearchFields_Domain::VIRTUAL_WATCHERS,
 		));
 		
@@ -782,7 +788,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 	}
 	
 	function getSubtotalFields() {
-		$all_fields = $this->getParamsAvailable();
+		$all_fields = $this->getParamsAvailable(true);
 		
 		$fields = array();
 
@@ -798,6 +804,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 					
 				// Booleans
 				case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
+				case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
 				case SearchFields_Domain::VIRTUAL_WATCHERS:
 					$pass = true;
 					break;
@@ -836,6 +843,10 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 
 			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
 				$counts = $this->_getSubtotalCountForContextLinkColumn('DAO_Domain', CerberusContexts::CONTEXT_DOMAIN, $column);
+				break;
+				
+			case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
+				$counts = $this->_getSubtotalCountForHasFieldsetColumn('DAO_Domain', CerberusContexts::CONTEXT_DOMAIN, $column);
 				break;
 				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
@@ -915,6 +926,10 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__context_link.tpl');
 				break;
 				
+			case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
+				$this->_renderCriteriaHasFieldset($tpl, CerberusContexts::CONTEXT_DOMAIN);
+				break;
+				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__context_worker.tpl');
 				break;
@@ -941,7 +956,11 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
 				$this->_renderVirtualContextLinks($param);
 				break;
-			
+				
+			case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
+				$this->_renderVirtualHasFieldset($param);
+				break;
+				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
 				$this->_renderVirtualWatchers($param);
 				break;
@@ -1011,6 +1030,11 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
 				@$context_links = DevblocksPlatform::importGPC($_REQUEST['context_link'],'array',array());
 				$criteria = new DevblocksSearchCriteria($field,DevblocksSearchCriteria::OPER_IN,$context_links);
+				break;
+				
+			case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
+				@$options = DevblocksPlatform::importGPC($_REQUEST['options'],'array',array());
+				$criteria = new DevblocksSearchCriteria($field,DevblocksSearchCriteria::OPER_IN,$options);
 				break;
 				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:

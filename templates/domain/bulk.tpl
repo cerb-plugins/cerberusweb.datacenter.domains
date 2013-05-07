@@ -4,7 +4,7 @@
 <input type="hidden" name="view_id" value="{$view_id}">
 <input type="hidden" name="ids" value="{$ids}">
 
-<fieldset>
+<fieldset class="peek">
 	<legend>{$translate->_('common.bulk_update.with')|capitalize}</legend>
 	<label><input type="radio" name="filter" value="" {if empty($ids)}checked{/if}> {$translate->_('common.bulk_update.filter.all')}</label> 
  	{if !empty($ids)}
@@ -14,7 +14,7 @@
 	{/if}
 </fieldset>
 
-<fieldset>
+<fieldset class="peek">
 	<legend>Set Fields</legend>
 	<table cellspacing="0" cellpadding="2" width="100%">
 		<tr>
@@ -24,25 +24,27 @@
 				{if $active_worker->hasPriv('datacenter.domains.actions.delete')}
 				<option value="deleted">{'status.deleted'|devblocks_translate|capitalize}</option>
 				{/if}
-	      	</select>
+			</select>
 			{if $active_worker->hasPriv('datacenter.domains.actions.delete')}
 			<button type="button" onclick="this.form.status.selectedIndex = 1;">{'status.deleted'|devblocks_translate|lower}</button>
 			{/if}
-	      	</td>
+			</td>
 		</tr>
 	</table>
 </fieldset>
 
 {if !empty($custom_fields)}
-<fieldset>
+<fieldset class="peek">
 	<legend>Set Custom Fields</legend>
 	{include file="devblocks:cerberusweb.core::internal/custom_fields/bulk/form.tpl" bulk=true}	
 </fieldset>
 {/if}
 
+{include file="devblocks:cerberusweb.core::internal/custom_fieldsets/peek_custom_fieldsets.tpl" context=CerberusContexts::CONTEXT_DOMAIN bulk=true}
+
 {include file="devblocks:cerberusweb.core::internal/macros/behavior/bulk.tpl" macros=$macros}
 
-<fieldset>
+<fieldset class="peek">
 	<legend>Actions</legend>
 	{*if $active_worker->hasPriv('crm.opp.view.actions.broadcast')*}
 
@@ -83,7 +85,6 @@
 	</blockquote><br>
 	{*/if*}
 </fieldset>
-
 
 <button type="button" onclick="genericAjaxPopupClose('peek');genericAjaxPost('formBatchUpdate','view{$view_id}');"><span class="cerb-sprite2 sprite-tick-circle"></span> {$translate->_('common.save_changes')|capitalize}</button>
 </form>
