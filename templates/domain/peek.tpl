@@ -33,7 +33,7 @@
 		<tr>
 			<td width="1%" nowrap="nowrap"><b>{'common.created'|devblocks_translate|capitalize}:</b></td>
 			<td width="99%">
-				<input type="text" name="created" value="{if empty($model->created)}now{else}{$model->created|devblocks_date}{/if}" style="width:98%;">
+				<input type="text" name="created" class="input_date" value="{if empty($model->created)}now{else}{$model->created|devblocks_date}{/if}" style="width:98%;">
 			</td>
 		</tr>
 		<tr>
@@ -113,6 +113,8 @@
 				$(this).next('DIV.notify').hide();
 			}
 		});
+		
+		$(this).find('input.input_date').cerbDateInputHelper();
 		
 		$('#frmDatacenterDomain button.chooser_addy').each(function() {
 			ajax.chooser(this,'cerberusweb.contexts.address','contact_address_id', { autocomplete:true });
