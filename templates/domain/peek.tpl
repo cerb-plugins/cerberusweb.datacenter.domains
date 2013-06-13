@@ -33,7 +33,7 @@
 		<tr>
 			<td width="1%" nowrap="nowrap"><b>{'common.created'|devblocks_translate|capitalize}:</b></td>
 			<td width="99%">
-				<input type="text" name="created" class="input_date" value="{if empty($model->created)}now{else}{$model->created|devblocks_date}{/if}" style="width:98%;">
+				<input type="text" name="created" class="input_date" size="45" value="{if empty($model->created)}now{else}{$model->created|devblocks_date}{/if}">
 			</td>
 		</tr>
 		<tr>
