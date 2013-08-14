@@ -148,7 +148,12 @@ class Page_Domains extends CerberusPageExtension {
 		$tpl->assign('token_labels', $token_labels);
 		
 		// Macros
-		$macros = DAO_TriggerEvent::getByOwner(CerberusContexts::CONTEXT_WORKER, $active_worker->id, 'event.macro.domain');
+		$macros = DAO_TriggerEvent::getByVirtualAttendantOwners(
+			array(
+				array(CerberusContexts::CONTEXT_WORKER, $active_worker->id),
+			),
+			'event.macro.domain'
+		);
 		$tpl->assign('macros', $macros);
 		
 		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/bulk.tpl');
