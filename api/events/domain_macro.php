@@ -9,7 +9,7 @@ class Event_DomainMacro extends AbstractEvent_Domain {
 	
 	static function trigger($trigger_id, $domain_id, $variables=array()) {
 		$events = DevblocksPlatform::getEventService();
-		$events->trigger(
+		return $events->trigger(
 			new Model_DevblocksEvent(
 				self::ID,
 				array(
