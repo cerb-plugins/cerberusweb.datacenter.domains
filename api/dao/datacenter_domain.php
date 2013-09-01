@@ -30,6 +30,14 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		);
 	}
 	
+	// [TODO] Interface
+	function getDefaultProperties() {
+		return array(
+			'server__label',
+			'created',
+		);
+	}
+	
 	function getContext($id_map, &$token_labels, &$token_values, $prefix=null) {
 		$domain = null;
 
@@ -52,10 +60,20 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		
 		// Token labels
 		$token_labels = array(
-			'created|date' => $prefix.$translate->_('common.created'),
+			'_label' => $prefix,
+			'created' => $prefix.$translate->_('common.created'),
 			'name' => $prefix.$translate->_('common.name'),
 			'record_url' => $prefix.$translate->_('common.url.record'),
 			'contacts_list' => $prefix.'Contacts List',
+		);
+		
+		// Token types
+		$token_types = array(
+			'_label' => 'context_url',
+			'created' => Model_CustomField::TYPE_DATE,
+			'name' => Model_CustomField::TYPE_SINGLE_LINE,
+			'record_url' => Model_CustomField::TYPE_URL,
+			'contacts_list' => null,
 		);
 		
 		// Custom field/fieldset token labels
@@ -66,6 +84,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$token_values = array();
 		
 		$token_values['_context'] = CerberusContexts::CONTEXT_DOMAIN;
+		$token_values['_types'] = $token_types;
 		
 		// Domain token values
 		if(null != $domain) {

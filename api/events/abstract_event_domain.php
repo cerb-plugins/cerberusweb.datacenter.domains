@@ -132,7 +132,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 			
 			'domain_contact_org_city' => Model_CustomField::TYPE_SINGLE_LINE,
 			'domain_contact_org_country' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_org_created|date' => Model_CustomField::TYPE_DATE,
+			'domain_contact_org_created' => Model_CustomField::TYPE_DATE,
 			'domain_contact_org_name' => Model_CustomField::TYPE_SINGLE_LINE,
 			'domain_contact_org_phone' => Model_CustomField::TYPE_SINGLE_LINE,
 			'domain_contact_org_postal' => Model_CustomField::TYPE_SINGLE_LINE,
