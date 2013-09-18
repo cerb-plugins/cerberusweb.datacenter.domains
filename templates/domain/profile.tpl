@@ -30,7 +30,7 @@
 	
 	{if $pref_keyboard_shortcuts}
 	<small>
-		{$translate->_('common.keyboard')|lower}:
+		{'common.keyboard'|devblocks_translate|lower}:
 		(<b>e</b>) {'common.edit'|devblocks_translate|lower}
 		{if !empty($macros)}(<b>m</b>) {'common.macros'|devblocks_translate|lower} {/if}
 		(<b>1-9</b>) change tab
