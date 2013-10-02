@@ -171,5 +171,19 @@
 			</params>
 		</extension>
 		
-    </extensions> 
+		<!-- REST Controllers -->
+		
+		<extension point="cerberusweb.rest.controller">
+			<id>cerberusweb.datacenter.domains.rest</id>
+			<name>Domains</name>
+			<class>
+				<file>api/rest/domains.php</file>
+				<name>ChRest_Domains</name>
+			</class>
+			<params>
+				<param key="uri" value="domains" />
+			</params>
+		</extension>
+		
+	</extensions> 
 </plugin>
