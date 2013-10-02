@@ -190,7 +190,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 				foreach($address_links as $address_link) { /* @var $address_link Model_ContextLink */
 					$token_labels = array();
 					$token_values = array();
-					CerberusContexts::getContext($address_link->context, $address_link->context_id, $token_labels, $token_values);
+					CerberusContexts::getContext($address_link->context, $address_link->context_id, $token_labels, $token_values, null, true);
 					
 					if(!empty($token_values))
 						$contacts[$address_link->context_id] = $token_values;
