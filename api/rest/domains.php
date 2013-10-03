@@ -38,9 +38,9 @@ class ChRest_Domains extends Extension_RestController implements IExtensionRestC
 			$action = array_shift($stack);
 			
 			switch($action) {
-// 				case 'note':
-// 					$this->postNote($id);
-// 					break;
+				case 'contacts':
+					$this->postContacts($id);
+					break;
 			}
 			
 		} else {
@@ -266,4 +266,73 @@ class ChRest_Domains extends Extension_RestController implements IExtensionRestC
 		}
 	}
 
+	function postContacts($domain_id) {
+		// Validate the ID
+		if(false == ($domain = DAO_Domain::get($domain_id)))
+			$this->error(self::ERRNO_CUSTOM, sprintf("The domain id #%d does not exist.", $domain_id));
+		
+		$postfields = array(
+			'mode' => 'string', // add | remove
+			'emails' => 'string', // CSV['jeff@example.com']
+			'ids' => 'string', // CSV [1,2,3]
+		);
+
+		$mode = null;
+		$ids = array();
+		
+		foreach($postfields as $postfield => $type) {
+			if(!isset($_POST[$postfield]))
+				continue;
+				
+			@$value = DevblocksPlatform::importGPC($_POST[$postfield], 'string', '');
+			
+			switch($postfield) {
+				case 'mode':
+					if(!in_array($value, array('add', 'remove')))
+						$this->error(self::ERRNO_CUSTOM, sprintf("The valid options for '%s' are 'add' or 'remove'.", $postfield));
+					
+					$mode = $value;
+					break;
+					
+				case 'ids':
+					$value = DevblocksPlatform::parseCsvString($value);
+
+					foreach($value as $id) {
+						if(false == ($address = DAO_Address::get($id)))
+							$this->error(self::ERRNO_CUSTOM, sprintf("The address id #%d in '%s' does not exist.", $id, $postfield));
+							
+						$ids[] = $address->id;
+					}
+					break;
+					
+				case 'emails':
+					$value = DevblocksPlatform::parseCsvString($value);
+
+					foreach($value as $email) {
+						if(false == ($address = DAO_Address::lookupAddress($email, ($mode=='add'))))
+							$this->error(self::ERRNO_CUSTOM, sprintf("The address '%s' in '%s' is invalid.", $email, $postfield));
+							
+						$ids[] = $address->id;
+					}
+					break;
+			}
+		}
+
+		if(!empty($ids))
+		switch($mode) {
+			case 'add':
+				foreach($ids as $address_id)
+					DAO_ContextLink::setLink(CerberusContexts::CONTEXT_DOMAIN, $domain_id, CerberusContexts::CONTEXT_ADDRESS, $address_id);
+				break;
+				
+			case 'remove':
+				foreach($ids as $address_id)
+					DAO_ContextLink::deleteLink(CerberusContexts::CONTEXT_DOMAIN, $domain_id, CerberusContexts::CONTEXT_ADDRESS, $address_id);
+				break;
+		}
+		
+		
+		$container = array();
+		$this->success($container);
+	}
 };
