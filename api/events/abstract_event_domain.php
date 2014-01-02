@@ -109,6 +109,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 	
 	function getConditionExtensions() {
 		$labels = $this->getLabels();
+		$types = $this->getTypes();
 		
 		$labels['domain_link'] = 'Domain is linked';
 		$labels['domain_server_link'] = 'Server is linked';
@@ -117,37 +118,13 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		$labels['domain_server_watcher_count'] = 'Server watcher count';
 		$labels['domain_watcher_count'] = 'Domain watcher count';
 		
-		$types = array(
-			'domain_name' => Model_CustomField::TYPE_SINGLE_LINE,
-			
-			'domain_server_name' => Model_CustomField::TYPE_SINGLE_LINE,
-
-			'domain_contact_address' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_is_banned' => Model_CustomField::TYPE_CHECKBOX,
-			'domain_contact_first_name' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_full_name' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_last_name' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_num_nonspam' => Model_CustomField::TYPE_NUMBER,
-			'domain_contact_num_spam' => Model_CustomField::TYPE_NUMBER,
-			
-			'domain_contact_org_city' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_org_country' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_org_created' => Model_CustomField::TYPE_DATE,
-			'domain_contact_org_name' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_org_phone' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_org_postal' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_org_province' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_org_street' => Model_CustomField::TYPE_SINGLE_LINE,
-			'domain_contact_org_website' => Model_CustomField::TYPE_URL,
-			
-			'domain_link' => null,
-			'domain_server_link' => null,
+		$types['domain_link'] = null;
+		$types['domain_server_link'] = null;
 		
-			'domain_contacts_count' => null,
-			'domain_server_watcher_count' => null,
-			'domain_watcher_count' => null,
-		);
-
+		$types['domain_contacts_count'] = null;
+		$types['domain_server_watcher_count'] = null;
+		$types['domain_watcher_count'] = null;
+		
 		$conditions = $this->_importLabelsTypesAsConditions($labels, $types);
 		
 		return $conditions;

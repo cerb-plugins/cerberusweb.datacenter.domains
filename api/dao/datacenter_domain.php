@@ -103,7 +103,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			$token_labels = array_merge($token_labels, $custom_field_labels);
 		
 		// Custom field/fieldset token types
-		if(false !== ($custom_field_types = $this->_getTokenTypesFromCustomFields($fields, $prefix)) && is_array($custom_field_labels))
+		if(false !== ($custom_field_types = $this->_getTokenTypesFromCustomFields($fields, $prefix)) && is_array($custom_field_types))
 			$token_types = array_merge($token_types, $custom_field_types);
 		
 		// Token values
@@ -220,7 +220,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 				
 			default:
 				if(substr($token,0,7) == 'custom_') {
-					$fields = $this->_lazyLoadCustomFields($context, $context_id);
+					$fields = $this->_lazyLoadCustomFields($token, $context, $context_id);
 					$values = array_merge($values, $fields);
 				}
 				break;
@@ -673,7 +673,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 			$where_sql.
 			($has_multiple_values ? 'GROUP BY datacenter_domain.id ' : '').
 			$sort_sql;
-			
+		
 		// [TODO] Could push the select logic down a level too
 		if($limit > 0) {
 			$rs = $db->SelectLimit($sql,$limit,$page*$limit) or die(__CLASS__ . '('.__LINE__.')'. ':' . $db->ErrorMsg()); /* @var $rs ADORecordSet */
