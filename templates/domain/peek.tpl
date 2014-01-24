@@ -100,7 +100,7 @@
 	$popup.one('popup_open', function(event,ui) {
 		$(this).find('input[type=text]:first').focus();
 		
-		$(this).dialog('option','title',"{'cerberusweb.datacenter.domain'|devblocks_translate}");
+		$(this).dialog('option','title',"{'cerberusweb.datacenter.domain'|devblocks_translate|escape:'javascript' nofilter}");
 		
 		$(this).find('button.chooser_watcher').each(function() {
 			ajax.chooser(this,'cerberusweb.contexts.worker','add_watcher_ids', { autocomplete:true });
