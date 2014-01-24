@@ -46,9 +46,10 @@
 
 <fieldset class="peek">
 	<legend>Actions</legend>
-	{*if $active_worker->hasPriv('crm.opp.view.actions.broadcast')*}
 
 	<label><input type="checkbox" name="do_broadcast" id="chkMassReply" onclick="$('#bulkDatacenterDomainBroadcast').toggle();">Send Broadcast</label>
+	<input type="hidden" name="broadcast_format" value="">
+	
 	<blockquote id="bulkDatacenterDomainBroadcast" style="display:none;margin:10px;">
 		<b>From:</b> <br>
 		<select name="broadcast_group_id">
@@ -59,31 +60,36 @@
 			{/foreach}
 		</select>
 		<br>
-		<b>Subject:</b> <br>
-		<input type="text" name="broadcast_subject" value="" style="width:100%;border:1px solid rgb(180,180,180);padding:2px;"><br>
-		<b>Compose:</b> {*[<a href="#">syntax</a>]*}<br>
+		
+		<b>Subject:</b><br>
+		<input type="text" name="broadcast_subject" value="" style="width:100%;border:1px solid rgb(180,180,180);padding:2px;">
+		<br>
+		
+		<b>Compose:</b><br>
 		<textarea name="broadcast_message" style="width:100%;height:200px;border:1px solid rgb(180,180,180);padding:2px;"></textarea>
-		<br>
-		<button type="button" onclick="ajax.chooserSnippet('snippets',$('#bulkDatacenterDomainBroadcast textarea[name=broadcast_message]'), { 'cerberusweb.contexts.datacenter.domain':'', '{CerberusContexts::CONTEXT_WORKER}':'{$active_worker->id}' });">{'common.snippets'|devblocks_translate|capitalize}</button>
-		<button type="button" onclick="genericAjaxPost('formBatchUpdate','bulkDatacenterDomainBroadcastTest','c=datacenter.domains&a=doBulkUpdateBroadcastTest');"><span class="cerb-sprite2 sprite-gear"></span> Test</button><!--
-		--><select class="insert-placeholders">
-			<option value="">-- insert at cursor --</option>
-			{foreach from=$token_labels key=k item=v}
-			<option value="{literal}{{{/literal}{$k}{literal}}}{/literal}">{$v}</option>
-			{/foreach}
-		</select>
-		<br>
-		<div id="bulkDatacenterDomainBroadcastTest"></div>
-		<b>{'common.options'|devblocks_translate|capitalize}:</b> 
-		<label><input type="radio" name="broadcast_is_queued" value="0" checked="checked"> Save as drafts</label>
-		<label><input type="radio" name="broadcast_is_queued" value="1"> Send now</label>
-		<br>
-		<b>{'common.status'|devblocks_translate|capitalize}:</b> 
-		<label><input type="radio" name="broadcast_next_is_closed" value="0"> {'status.open'|devblocks_translate|capitalize}</label>
-		<label><input type="radio" name="broadcast_next_is_closed" value="2" checked="checked"> {'status.waiting'|devblocks_translate|capitalize}</label>
-		<label><input type="radio" name="broadcast_next_is_closed" value="1"> {'status.closed'|devblocks_translate|capitalize}</label>
-	</blockquote><br>
-	{*/if*}
+		
+		<div>
+			<button type="button" onclick="ajax.chooserSnippet('snippets',$('#bulkDatacenterDomainBroadcast textarea[name=broadcast_message]'), { 'cerberusweb.contexts.datacenter.domain':'', '{CerberusContexts::CONTEXT_WORKER}':'{$active_worker->id}' });">{'common.snippets'|devblocks_translate|capitalize}</button>
+			<select class="insert-placeholders">
+				<option value="">-- insert at cursor --</option>
+				{foreach from=$token_labels key=k item=v}
+				<option value="{literal}{{{/literal}{$k}{literal}}}{/literal}">{$v}</option>
+				{/foreach}
+			</select>
+			<br>
+			
+			<b>{'common.options'|devblocks_translate|capitalize}:</b> 
+			<label><input type="radio" name="broadcast_is_queued" value="0" checked="checked"> Save as drafts</label>
+			<label><input type="radio" name="broadcast_is_queued" value="1"> Send now</label>
+			<br>
+			
+			<b>{'common.status'|devblocks_translate|capitalize}:</b> 
+			<label><input type="radio" name="broadcast_next_is_closed" value="0"> {'status.open'|devblocks_translate|capitalize}</label>
+			<label><input type="radio" name="broadcast_next_is_closed" value="2" checked="checked"> {'status.waiting'|devblocks_translate|capitalize}</label>
+			<label><input type="radio" name="broadcast_next_is_closed" value="1"> {'status.closed'|devblocks_translate|capitalize}</label>
+		</div>
+	</blockquote>
+
 </fieldset>
 
 <button type="button" onclick="genericAjaxPopupClose('peek');genericAjaxPost('formBatchUpdate','view{$view_id}');"><span class="cerb-sprite2 sprite-tick-circle"></span> {'common.save_changes'|devblocks_translate|capitalize}</button>
@@ -95,6 +101,9 @@
 		var $this = $(this);
 		$this.dialog('option','title',"{'common.bulk_update'|devblocks_translate|capitalize}");
 		
+		var $frm = $('#formBatchUpdate');
+		var $content = $frm.find('textarea[name=broadcast_message]');
+		
 		$this.find('select.insert-placeholders').change(function(e) {
 			var $select = $(this);
 			var $val = $select.val();
@@ -102,11 +111,98 @@
 			if($val.length == 0)
 				return;
 			
-			var $textarea = $select.siblings('textarea[name=broadcast_message]');
-			
-			$textarea.insertAtCursor($val).focus();
+			$content.insertAtCursor($val).focus();
 			
 			$select.val('');
 		});
+		
+		// Text editor
+		
+		var markitupPlaintextSettings = $.extend(true, { }, markitupPlaintextDefaults);
+		var markitupParsedownSettings = $.extend(true, { }, markitupParsedownDefaults);
+		
+		markitupPlaintextSettings.markupSet.unshift(
+			{ name:'Switch to Markdown', openWith: 
+				function(markItUp) { 
+					var $editor = $(markItUp.textarea);
+					$editor.markItUpRemove().markItUp(markitupParsedownSettings);
+					{if empty($mail_reply_textbox_size_inelastic)}
+					$editor.elastic();
+					{/if}
+					$editor.closest('form').find('input:hidden[name=broadcast_format]').val('parsedown');
+				},
+				className:'parsedown'
+			}
+		);
+		
+		markitupPlaintextSettings.markupSet.push(
+			{ separator:'---------------' },
+			{ name:'Preview', key: 'P', call:'preview', className:"preview" }
+		);
+		
+		var previewParser = function(content) {
+			genericAjaxPost(
+				'formBatchUpdate',
+				'',
+				'c=datacenter.domains&a=doBulkUpdateBroadcastTest',
+				function(o) {
+					content = o;
+				},
+				{
+					async: false
+				}
+			);
+			
+			return content;
+		};
+		
+		markitupPlaintextSettings.previewParser = previewParser;
+		markitupPlaintextSettings.previewAutoRefresh = false;
+		
+		markitupParsedownSettings.previewParser = previewParser;
+		markitupParsedownSettings.previewAutoRefresh = false;
+		delete markitupParsedownSettings.previewInWindow;
+		
+		markitupParsedownSettings.markupSet.unshift(
+			{ name:'Switch to Plaintext', openWith: 
+				function(markItUp) { 
+					var $editor = $(markItUp.textarea);
+					$editor.markItUpRemove().markItUp(markitupPlaintextSettings);
+					{if empty($mail_reply_textbox_size_inelastic)}
+					$editor.elastic();
+					{/if}
+					$editor.closest('form').find('input:hidden[name=broadcast_format]').val('');
+				},
+				className:'plaintext'
+			},
+			{ separator:'---------------' }
+		);
+		
+		markitupParsedownSettings.markupSet.splice(
+			6,
+			0,
+			{ name:'Upload an Image', openWith: 
+				function(markItUp) {
+					$chooser=genericAjaxPopup('chooser','c=internal&a=chooserOpenFile&single=1',null,true,'750');
+					
+					$chooser.one('chooser_save', function(event) {
+						if(!event.response || 0 == event.response)
+							return;
+						
+						$content.insertAtCursor("![inline-image](" + event.response[0].url + ")");
+					});
+				},
+				key: 'U',
+				className:'image-inline'
+			}
+		);
+		
+		try {
+			$content.markItUp(markitupPlaintextSettings);
+			
+		} catch(e) {
+			if(window.console)
+				console.log(e);
+		}
 	});
 </script>

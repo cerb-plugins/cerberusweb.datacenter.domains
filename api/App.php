@@ -176,25 +176,6 @@ class Page_Domains extends CerberusPageExtension {
 		
 		$do = array();
 		
-		// Do: Due
-//		$due = trim(DevblocksPlatform::importGPC($_POST['due'],'string',''));
-//		if(0 != strlen($due))
-//			$do['due'] = $due;
-			
-//		// Watchers
-//		$watcher_params = array();
-//
-//		@$watcher_add_ids = DevblocksPlatform::importGPC($_REQUEST['do_watcher_add_ids'],'array',array());
-//		if(!empty($watcher_add_ids))
-//			$watcher_params['add'] = $watcher_add_ids;
-//
-//		@$watcher_remove_ids = DevblocksPlatform::importGPC($_REQUEST['do_watcher_remove_ids'],'array',array());
-//		if(!empty($watcher_remove_ids))
-//			$watcher_params['remove'] = $watcher_remove_ids;
-//
-//		if(!empty($watcher_params))
-//			$do['watchers'] = $watcher_params;
-		
 		$status = DevblocksPlatform::importGPC($_POST['status'],'string','');
 		
 		// Delete
@@ -214,12 +195,15 @@ class Page_Domains extends CerberusPageExtension {
 			@$broadcast_group_id = DevblocksPlatform::importGPC($_REQUEST['broadcast_group_id'],'integer',0);
 			@$broadcast_subject = DevblocksPlatform::importGPC($_REQUEST['broadcast_subject'],'string',null);
 			@$broadcast_message = DevblocksPlatform::importGPC($_REQUEST['broadcast_message'],'string',null);
+			@$broadcast_format = DevblocksPlatform::importGPC($_REQUEST['broadcast_format'],'string',null);
 			@$broadcast_is_queued = DevblocksPlatform::importGPC($_REQUEST['broadcast_is_queued'],'integer',0);
 			@$broadcast_is_closed = DevblocksPlatform::importGPC($_REQUEST['broadcast_next_is_closed'],'integer',0);
+			
 			if(0 != strlen($do_broadcast) && !empty($broadcast_subject) && !empty($broadcast_message)) {
 				$do['broadcast'] = array(
 					'subject' => $broadcast_subject,
 					'message' => $broadcast_message,
+					'format' => $broadcast_format,
 					'is_queued' => $broadcast_is_queued,
 					'next_is_closed' => $broadcast_is_closed,
 					'group_id' => $broadcast_group_id,
@@ -274,6 +258,8 @@ class Page_Domains extends CerberusPageExtension {
 		if(1 || $active_worker->hasPriv('core.addybook.addy.view.actions.broadcast')) {
 			@$broadcast_subject = DevblocksPlatform::importGPC($_REQUEST['broadcast_subject'],'string',null);
 			@$broadcast_message = DevblocksPlatform::importGPC($_REQUEST['broadcast_message'],'string',null);
+			@$broadcast_format = DevblocksPlatform::importGPC($_REQUEST['broadcast_format'],'string',null);
+			@$broadcast_group_id = DevblocksPlatform::importGPC($_REQUEST['broadcast_group_id'],'integer',0);
 
 			@$filter = DevblocksPlatform::importGPC($_REQUEST['filter'],'string','');
 			@$ids = DevblocksPlatform::importGPC($_REQUEST['ids'],'string','');
@@ -316,12 +302,31 @@ class Page_Domains extends CerberusPageExtension {
 						if(false === ($out = $tpl_builder->build($template, $token_values))) {
 							// If we failed, show the compile errors
 							$errors = $tpl_builder->getErrors();
-							$success= false;
+							$success = false;
 							$output = @array_shift($errors);
+							
 						} else {
 							// If successful, return the parsed template
 							$success = true;
 							$output = $out;
+							
+							switch($broadcast_format) {
+								case 'parsedown':
+									// Markdown
+									$output = DevblocksPlatform::parseMarkdown($output, true);
+									
+									// HTML Template
+									if(false != ($group = DAO_Group::get($broadcast_group_id))) {
+										// [TODO] $bucket_id
+										if(false != ($html_template = $group->getReplyHtmlTemplate())) {
+											$output = $tpl_builder->build($html_template->content, array('message_body' => $output));
+										}
+									}
+									
+									// HTML Purify
+									$output = DevblocksPlatform::purifyHTML($output, true);
+									break;
+							}
 						}
 					}
 					
@@ -330,10 +335,17 @@ class Page_Domains extends CerberusPageExtension {
 				}
 			}
 			
-			$tpl->assign('success', $success);
-			$tpl->assign('output', $output);
-			
-			$tpl->display('devblocks:cerberusweb.core::internal/renderers/test_results.tpl');
+			if($success) {
+				header("Content-Type: text/html; charset=" . LANG_CHARSET_CODE);
+				echo sprintf('<html><head><meta http-equiv="content-type" content="text/html; charset=%s"></head><body>',
+					LANG_CHARSET_CODE
+				);
+				echo $output;
+				echo '</body></html>';
+				
+			} else {
+				echo $output;
+			}
 		}
 	}
 	
