@@ -1197,6 +1197,9 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 						if(isset($params['format']))
 							$json_params['format'] = $params['format'];
 						
+						if(isset($params['html_template_id']))
+							$json_params['html_template_id'] = intval($params['html_template_id']);
+						
 						$fields = array(
 							DAO_MailQueue::TYPE => Model_MailQueue::TYPE_COMPOSE,
 							DAO_MailQueue::TICKET_ID => 0,
