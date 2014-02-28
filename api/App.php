@@ -343,7 +343,7 @@ class Page_Domains extends CerberusPageExtension {
 									break;
 									
 								default:
-									$output = nl2br(htmlentities($output));
+									$output = nl2br(htmlentities($output, ENT_QUOTES, LANG_CHARSET_CODE));
 									break;
 							}
 						}
