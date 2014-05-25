@@ -99,7 +99,7 @@
 	$popup = genericAjaxPopupFetch('peek');
 	$popup.one('popup_open', function(event,ui) {
 		var $this = $(this);
-		$this.dialog('option','title',"{'common.bulk_update'|devblocks_translate|capitalize}");
+		$this.dialog('option','title',"{'common.bulk_update'|devblocks_translate|capitalize|escape:'javascript' nofilter}");
 		
 		var $frm = $('#formBatchUpdate');
 		var $content = $frm.find('textarea[name=broadcast_message]');

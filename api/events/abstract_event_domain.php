@@ -86,10 +86,12 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 			'domain_contacts' => array(
 				'label' => 'Domain contacts',
 				'context' => CerberusContexts::CONTEXT_ADDRESS,
+				'is_multiple' => true,
 			),
 			'domain_watchers' => array(
 				'label' => 'Domain watchers',
 				'context' => CerberusContexts::CONTEXT_WORKER,
+				'is_multiple' => true,
 			),
 			'domain_server_id' => array(
 				'label' => 'Server',
@@ -98,6 +100,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 			'domain_server_watchers' => array(
 				'label' => 'Server watchers',
 				'context' => CerberusContexts::CONTEXT_WORKER,
+				'is_multiple' => true,
 			),
 		);
 		
@@ -132,14 +135,14 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		return $conditions;
 	}
 	
-	function renderConditionExtension($token, $trigger, $params=array(), $seq=null) {
+	function renderConditionExtension($token, $as_token, $trigger, $params=array(), $seq=null) {
 		$tpl = DevblocksPlatform::getTemplateService();
 		$tpl->assign('params', $params);
 
 		if(!is_null($seq))
 			$tpl->assign('namePrefix','condition'.$seq);
 		
-		switch($token) {
+		switch($as_token) {
 			case 'domain_link':
 			case 'domain_server_link':
 				$contexts = Extension_DevblocksContext::getAll(false);
@@ -158,10 +161,10 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		$tpl->clearAssign('params');
 	}
 	
-	function runConditionExtension($token, $trigger, $params, DevblocksDictionaryDelegate $dict) {
+	function runConditionExtension($token, $as_token, $trigger, $params, DevblocksDictionaryDelegate $dict) {
 		$pass = true;
 		
-		switch($token) {
+		switch($as_token) {
 			case 'domain_link':
 			case 'domain_server_link':
 				$not = (substr($params['oper'],0,1) == '!');
@@ -170,7 +173,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				$from_context = null;
 				$from_context_id = null;
 				
-				switch($token) {
+				switch($as_token) {
 					case 'domain_link':
 						$from_context = CerberusContexts::CONTEXT_DOMAIN;
 						@$from_context_id = $dict->domain_id;
@@ -217,7 +220,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				$not = (substr($params['oper'],0,1) == '!');
 				$oper = ltrim($params['oper'],'!');
 				
-				switch($token) {
+				switch($as_token) {
 					case 'domain_contact_org_watcher_count':
 						$value = count($dict->domain_contact_org_watchers);
 						break;
