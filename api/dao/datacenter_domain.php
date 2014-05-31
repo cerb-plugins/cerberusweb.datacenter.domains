@@ -144,7 +144,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 
 		CerberusContexts::merge(
 			'contact_',
-			'Contact:',
+			$prefix.'Contact:',
 			$merge_token_labels,
 			$merge_token_values,
 			$token_labels,
@@ -158,7 +158,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 
 		CerberusContexts::merge(
 			'server_',
-			'',
+			$prefix,
 			$merge_token_labels,
 			$merge_token_values,
 			$token_labels,

@@ -94,11 +94,11 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				'is_multiple' => true,
 			),
 			'domain_server_id' => array(
-				'label' => 'Server',
+				'label' => 'Domain server',
 				'context' => CerberusContexts::CONTEXT_SERVER,
 			),
 			'domain_server_watchers' => array(
-				'label' => 'Server watchers',
+				'label' => 'Domain server watchers',
 				'context' => CerberusContexts::CONTEXT_WORKER,
 				'is_multiple' => true,
 			),
@@ -107,7 +107,8 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		$vars = parent::getValuesContexts($trigger);
 		
 		$vals_to_ctx = array_merge($vals, $vars);
-		asort($vals_to_ctx);
+		
+		DevblocksPlatform::sortObjects($vals_to_ctx, '[label]');
 		
 		return $vals_to_ctx;
 	}
@@ -117,10 +118,10 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		$types = $this->getTypes();
 		
 		$labels['domain_link'] = 'Domain is linked';
-		$labels['domain_server_link'] = 'Server is linked';
+		$labels['domain_server_link'] = 'Domain server is linked';
 		
 		$labels['domain_contacts_count'] = 'Domain contacts count';
-		$labels['domain_server_watcher_count'] = 'Server watcher count';
+		$labels['domain_server_watcher_count'] = 'Domain server watcher count';
 		$labels['domain_watcher_count'] = 'Domain watcher count';
 		
 		$types['domain_link'] = null;
