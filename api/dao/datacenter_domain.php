@@ -316,9 +316,8 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		
 		// Comments
 		$comments = DAO_Comment::getByContext(CerberusContexts::CONTEXT_DOMAIN, $id);
-		$last_comment = array_shift($comments);
-		unset($comments);
-		$tpl->assign('last_comment', $last_comment);
+		$comments = array_reverse($comments, true);
+		$tpl->assign('comments', $comments);
 		
 		// Render
 		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek.tpl');
