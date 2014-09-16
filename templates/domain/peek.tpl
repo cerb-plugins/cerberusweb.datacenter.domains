@@ -81,8 +81,7 @@
 
 <fieldset class="peek">
 	<legend>{'common.comment'|devblocks_translate|capitalize}</legend>
-	<textarea name="comment" rows="5" cols="45" style="width:98%;"></textarea>
-	<div style="float:right;color:rgb(120,120,120);">{'comment.notify.at_mention'|devblocks_translate}</div>
+	<textarea name="comment" rows="5" cols="45" style="width:98%;" title="{'comment.notify.at_mention'|devblocks_translate}"></textarea>
 </fieldset>
 
 <button type="button" onclick="genericAjaxPopupPostCloseReloadView(null,'frmDatacenterDomain','{$view_id}', false, 'datacenter_domain_save');"><span class="cerb-sprite2 sprite-tick-circle"></span> {'common.save_changes'|devblocks_translate|capitalize}</button>
@@ -107,6 +106,15 @@
 		
 		$('#frmDatacenterDomain button.chooser_addy').each(function() {
 			ajax.chooser(this,'cerberusweb.contexts.address','contact_address_id', { autocomplete:true });
+		});
+		
+		// Tooltips
+		
+		$popup.find(':input[title], textarea[title]').tooltip({
+			position: {
+				my: 'left top',
+				at: 'left+10 bottom+5'
+			}
 		});
 		
 		// @mentions
