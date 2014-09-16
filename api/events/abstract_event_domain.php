@@ -263,7 +263,10 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 		return $pass;
 	}
 	
+	// [TODO] In 6.8, we need to switch to getActionCustomFieldsFromValues (and prime it)
 	function getActionExtensions(Model_TriggerEvent $trigger) {
+		//$this->getLabels($trigger);
+		
 		$actions =
 			array(
 				'add_watchers' => array('label' =>'Add watchers'),
@@ -275,6 +278,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				'set_links' => array('label' => 'Set links'),
 			)
 			+ DevblocksEventHelper::getActionCustomFieldsFromLabels($this->getLabels($trigger))
+			//+ DevblocksEventHelper::getActionCustomFieldsFromValues($this->getValues())
 			;
 			
 		return $actions;
