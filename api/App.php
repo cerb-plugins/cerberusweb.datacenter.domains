@@ -139,6 +139,12 @@ class Page_Domains extends CerberusPageExtension {
 		$groups = DAO_Group::getAll();
 		$tpl->assign('groups', $groups);
 		
+		// Servers
+		if(DevblocksPlatform::isPluginEnabled('cerberusweb.datacenter.servers')) {
+			$servers = DAO_Server::getAll();
+			$tpl->assign('servers', $servers);
+		}
+		
 		// Custom Fields
 		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN, false);
 		$tpl->assign('custom_fields', $custom_fields);
@@ -181,6 +187,7 @@ class Page_Domains extends CerberusPageExtension {
 		$do = array();
 		
 		$status = DevblocksPlatform::importGPC($_POST['status'],'string','');
+		$server_id = DevblocksPlatform::importGPC($_POST['server_id'],'string','');
 		
 		// Delete
 		if(strlen($status) > 0) {
@@ -191,6 +198,10 @@ class Page_Domains extends CerberusPageExtension {
 					}
 					break;
 			}
+		}
+		
+		if(strlen($server_id)) {
+			$do['server_id'] = intval($server_id);
 		}
 		
 		// Broadcast: Mass Reply

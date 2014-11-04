@@ -771,7 +771,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 		$columns = array(
 			self::ID => new DevblocksSearchField(self::ID, 'datacenter_domain', 'id', $translate->_('common.id')),
 			self::NAME => new DevblocksSearchField(self::NAME, 'datacenter_domain', 'name', $translate->_('common.name'), Model_CustomField::TYPE_SINGLE_LINE),
-			self::SERVER_ID => new DevblocksSearchField(self::SERVER_ID, 'datacenter_domain', 'server_id', $translate->_('cerberusweb.datacenter.common.server')),
+			self::SERVER_ID => new DevblocksSearchField(self::SERVER_ID, 'datacenter_domain', 'server_id', $translate->_('dao.datacenter_domain.server_id')),
 			self::CREATED => new DevblocksSearchField(self::CREATED, 'datacenter_domain', 'created', $translate->_('common.created'), Model_CustomField::TYPE_DATE),
 			
 			self::VIRTUAL_CONTEXT_LINK => new DevblocksSearchField(self::VIRTUAL_CONTEXT_LINK, '*', 'context_link', $translate->_('common.links'), null),
@@ -1152,12 +1152,11 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals {
 		if(is_array($do))
 		foreach($do as $k => $v) {
 			switch($k) {
-				// [TODO] Implement actions
-				case 'example':
-					//$change_fields[DAO_Domain::EXAMPLE] = 'some value';
-					break;
 				case 'delete':
 					$deleted = true;
+					break;
+				case 'server_id':
+					$change_fields[DAO_Domain::SERVER_ID] = $v;
 					break;
 				default:
 					// Custom fields

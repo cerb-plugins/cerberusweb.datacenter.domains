@@ -30,6 +30,20 @@
 			{/if}
 			</td>
 		</tr>
+		
+		{if is_array($servers) && !empty($servers)}
+		<tr>
+			<td width="0%" nowrap="nowrap" valign="top" align="right">{'dao.datacenter_domain.server_id'|devblocks_translate|capitalize}:</td>
+			<td width="100%"><select name="server_id">
+				<option value=""></option>
+				{foreach from=$servers item=server}
+				<option value="{$server->id}">{$server->name}</option>
+				{/foreach}
+			</select>
+			</td>
+		</tr>
+		{/if}
+		
 	</table>
 </fieldset>
 
