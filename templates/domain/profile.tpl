@@ -44,9 +44,7 @@
 	<div style="margin-left:15px;">
 	{foreach from=$properties item=v key=k name=props}
 		<div class="property">
-			{if $k == 'server'}
-				<b>{$v.label|capitalize}:</b>
-				<a href="javascript:;" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={CerberusContexts::CONTEXT_SERVER}&context_id={$domain->server_id}&view_id={$view->id}',null,false,'500');">{$v.server->name}</a>
+			{if $k == '...'}
 			{else}
 				{include file="devblocks:cerberusweb.core::internal/custom_fields/profile_cell_renderer.tpl"}
 			{/if}

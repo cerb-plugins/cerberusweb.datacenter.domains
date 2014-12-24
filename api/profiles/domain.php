@@ -57,13 +57,12 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		$properties = array();
 
 		if(!empty($domain->server_id)) {
-			if(null != ($server = DAO_Server::get($domain->server_id))) {
-				$properties['server'] = array(
-					'label' => ucfirst($translate->_('cerberusweb.datacenter.common.server')),
-					'type' => null,
-					'server' => $server,
-				);
-			}
+			$properties['server'] = array(
+				'label' => ucfirst($translate->_('cerberusweb.datacenter.common.server')),
+				'type' => Model_CustomField::TYPE_LINK,
+				'params' => array('context' => CerberusContexts::CONTEXT_SERVER),
+				'value' => $domain->server_id,
+			);
 		}
 
 		$properties['created'] = array(
