@@ -89,8 +89,8 @@
 						<a href="javascript:;" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={CerberusContexts::CONTEXT_SERVER}&context_id={$servers.{$result.$column}->id}&view_id={$view->id}',null,false,'500');">{$servers.{$result.$column}->name}</a>
 					{/if}
 				</td>
-			{elseif $column=="w_created"}
-				<td><abbr title="{$result.$column|devblocks_date}">{$result.w_created|devblocks_prettytime}</abbr>&nbsp;</td>
+			{elseif in_array($column, ["w_created", "w_updated"])}
+				<td><abbr title="{$result.$column|devblocks_date}">{$result.$column|devblocks_prettytime}</abbr>&nbsp;</td>
 			{else}
 				<td>{$result.$column}</td>
 			{/if}

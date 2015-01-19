@@ -57,6 +57,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		return array(
 			'server__label',
 			'created',
+			'updated',
 		);
 	}
 	
@@ -89,6 +90,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			'created' => $prefix.$translate->_('common.created'),
 			'name' => $prefix.$translate->_('common.name'),
 			'record_url' => $prefix.$translate->_('common.url.record'),
+			'updated' => $prefix.$translate->_('common.updated'),
 			'contacts_list' => $prefix.'Contacts List',
 		);
 		
@@ -99,6 +101,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			'created' => Model_CustomField::TYPE_DATE,
 			'name' => Model_CustomField::TYPE_SINGLE_LINE,
 			'record_url' => Model_CustomField::TYPE_URL,
+			'updated' => Model_CustomField::TYPE_DATE,
 			'contacts_list' => null,
 		);
 		
@@ -123,6 +126,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			$token_values['id'] = $domain->id;
 			$token_values['created'] = $domain->created;
 			$token_values['name'] = $domain->name;
+			$token_values['updated'] = $domain->updated;
 			
 			// Custom fields
 			$token_values = $this->_importModelCustomFieldsAsValues($domain, $token_values);
@@ -339,6 +343,11 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 				'required' => true,
 				'force_match' => true,
 			),
+			'updated' => array(
+				'label' => 'Updated Date',
+				'type' => Model_CustomField::TYPE_DATE,
+				'param' => SearchFields_Domain::UPDATED,
+			),
 // 			'primary_email_id' => array(
 // 				'label' => 'Email',
 // 				'type' => 'ctx_' . CerberusContexts::CONTEXT_ADDRESS,
@@ -372,6 +381,9 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			// Default the created date to now
 			if(!isset($fields[DAO_Domain::CREATED]))
 				$fields[DAO_Domain::CREATED] = time();
+			
+			if(!isset($fields[DAO_Domain::UPDATED]))
+				$fields[DAO_Domain::UPDATED] = time();
 				
 			// Create
 			$meta['object_id'] = DAO_Domain::create($fields);
@@ -393,6 +405,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	const NAME = 'name';
 	const SERVER_ID = 'server_id';
 	const CREATED = 'created';
+	const UPDATED = 'updated';
 
 	static function create($fields) {
 		$db = DevblocksPlatform::getDatabaseService();
@@ -409,6 +422,9 @@ class DAO_Domain extends Cerb_ORMHelper {
 	static function update($ids, $fields, $check_deltas=true) {
 		if(!is_array($ids))
 			$ids = array($ids);
+		
+		if(!isset($fields[self::UPDATED]))
+			$fields[self::UPDATED] = time();
 		
 		// Make a diff for the requested objects in batches
 		
@@ -462,7 +478,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 		list($where_sql, $sort_sql, $limit_sql) = self::_getWhereSQL($where, $sortBy, $sortAsc, $limit);
 		
 		// SQL
-		$sql = "SELECT id, name, server_id, created ".
+		$sql = "SELECT id, name, server_id, created, updated ".
 			"FROM datacenter_domain ".
 			$where_sql.
 			$sort_sql.
@@ -497,10 +513,11 @@ class DAO_Domain extends Cerb_ORMHelper {
 		
 		while($row = mysqli_fetch_assoc($rs)) {
 			$object = new Model_Domain();
-			$object->id = $row['id'];
+			$object->id = intval($row['id']);
 			$object->name = $row['name'];
-			$object->server_id = $row['server_id'];
-			$object->created = $row['created'];
+			$object->server_id = intval($row['server_id']);
+			$object->created = intval($row['created']);
+			$object->updated = intval($row['updated']);
 			$objects[$object->id] = $object;
 		}
 		
@@ -567,11 +584,13 @@ class DAO_Domain extends Cerb_ORMHelper {
 			"datacenter_domain.id as %s, ".
 			"datacenter_domain.name as %s, ".
 			"datacenter_domain.server_id as %s, ".
-			"datacenter_domain.created as %s ",
+			"datacenter_domain.created as %s, ".
+			"datacenter_domain.updated as %s ",
 				SearchFields_Domain::ID,
 				SearchFields_Domain::NAME,
 				SearchFields_Domain::SERVER_ID,
-				SearchFields_Domain::CREATED
+				SearchFields_Domain::CREATED,
+				SearchFields_Domain::UPDATED
 			);
 			
 		$join_sql = "FROM datacenter_domain ".
@@ -749,6 +768,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 	const NAME = 'w_name';
 	const SERVER_ID = 'w_server_id';
 	const CREATED = 'w_created';
+	const UPDATED = 'w_updated';
 	
 	// Virtuals
 	const VIRTUAL_CONTEXT_LINK = '*_context_link';
@@ -773,6 +793,7 @@ class SearchFields_Domain implements IDevblocksSearchFields {
 			self::NAME => new DevblocksSearchField(self::NAME, 'datacenter_domain', 'name', $translate->_('common.name'), Model_CustomField::TYPE_SINGLE_LINE),
 			self::SERVER_ID => new DevblocksSearchField(self::SERVER_ID, 'datacenter_domain', 'server_id', $translate->_('dao.datacenter_domain.server_id')),
 			self::CREATED => new DevblocksSearchField(self::CREATED, 'datacenter_domain', 'created', $translate->_('common.created'), Model_CustomField::TYPE_DATE),
+			self::UPDATED => new DevblocksSearchField(self::UPDATED, 'datacenter_domain', 'updated', $translate->_('common.updated'), Model_CustomField::TYPE_DATE),
 			
 			self::VIRTUAL_CONTEXT_LINK => new DevblocksSearchField(self::VIRTUAL_CONTEXT_LINK, '*', 'context_link', $translate->_('common.links'), null),
 			self::VIRTUAL_HAS_FIELDSET => new DevblocksSearchField(self::VIRTUAL_HAS_FIELDSET, '*', 'has_fieldset', $translate->_('common.fieldset'), null),
@@ -809,6 +830,7 @@ class Model_Domain {
 	public $name;
 	public $server_id;
 	public $created;
+	public $updated;
 };
 
 class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IAbstractView_QuickSearch {
@@ -825,7 +847,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 
 		$this->view_columns = array(
 			SearchFields_Domain::SERVER_ID,
-			SearchFields_Domain::CREATED,
+			SearchFields_Domain::UPDATED,
 		);
 		
 		// Filter columns
@@ -974,6 +996,11 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 						'web,database,mail',
 					)
 				),
+			'updated' => 
+				array(
+					'type' => DevblocksSearchCriteria::TYPE_DATE,
+					'options' => array('param_key' => SearchFields_Domain::UPDATED),
+				),
 			'watchers' => 
 				array(
 					'type' => DevblocksSearchCriteria::TYPE_WORKER,
@@ -1077,6 +1104,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 				break;
 				
 			case SearchFields_Domain::CREATED:
+			case SearchFields_Domain::UPDATED:
 				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__date.tpl');
 				break;
 				
@@ -1187,6 +1215,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 				break;
 				
 			case SearchFields_Domain::CREATED:
+			case SearchFields_Domain::UPDATED:
 				$criteria = $this->_doSetCriteriaDate($field, $oper);
 				break;
 				
