@@ -4,31 +4,32 @@
 	<name>Domains</name>
 	<description>This plugin adds Domain objects for managing webhosting/SaaS/On-Demand infrastructure.</description>
 	<author>Webgroup Media, LLC.</author>
-	<version>1.0.51</version>
+	<version>1.0.52</version>
 	<link>http://www.cerbweb.com/book/latest/plugins/cerberusweb.datacenter.domains.html</link>
 	<image>plugin.png</image>
- 
+
  	<!-- Requirements -->
 
 	<requires>
 		<app_version min="6.9" max="6.9.99" />
 	</requires>
- 
+
 	<!-- Plugin Dependencies -->
-	
+
 	<dependencies>
 		<require plugin_id="cerberusweb.core" version="6.9.0" />
+		<require plugin_id="cerberusweb.datacenter.servers" version="6.9.0" />
 	</dependencies>
 
 	<!-- Patches -->
-	
+
 	<patches>
 		<patch version="5.1.0" revision="1" file="patches/5.1.0.php" />
 		<patch version="6.9.0" revision="2" file="patches/6.9.0.php" />
 	</patches>
-	
+
 	<!-- Exported Classes -->
-	
+
 	<class_loader>
 		<file path="api/dao/datacenter_domain.php">
 			<class name="Context_Domain" />
@@ -53,11 +54,11 @@
 	</acl>
 
 	<!-- Extensions -->
- 
+
 	<extensions>
 
 		<!-- Event Listeners -->
-		
+
 		<extension point="devblocks.listener.event">
 			<id>cerberusweb.datacenter.domains.listener</id>
 			<name>Event Listener</name>
@@ -75,7 +76,7 @@
 		</extension>
 
 		<!-- Contexts -->
-		
+
 		<extension point="devblocks.context">
 			<id>cerberusweb.contexts.datacenter.domain</id>
 			<name>Domain</name>
@@ -101,7 +102,7 @@
 		</extension>
 
 		<!-- Events -->
-		
+
 		<extension point="devblocks.event">
 			<id>event.macro.domain</id>
 			<name>Custom domain behavior</name>
@@ -138,7 +139,7 @@
 		</extension>
 
 		<!-- Profile Page Sections -->
-		
+
 		<extension point="cerberusweb.ui.page.section">
 			<id>cerberusweb.datacenter.page.profiles.domain</id>
 			<name>Domain Section</name>
@@ -151,9 +152,9 @@
 				<param key="uri" value="domain" />
 			</params>
 		</extension>
-		
+
 		<!-- Server Tab -->
-		
+
 		<extension point="cerberusweb.ui.context.profile.tab">
 			<id>cerberusweb.datacenter.domains.server_tab</id>
 			<name>Domains Tab</name>
@@ -171,9 +172,9 @@
 				<param key="title" value="cerberusweb.datacenter.domains" />
 			</params>
 		</extension>
-		
+
 		<!-- REST Controllers -->
-		
+
 		<extension point="cerberusweb.rest.controller">
 			<id>cerberusweb.datacenter.domains.rest</id>
 			<name>Domains</name>
@@ -185,6 +186,6 @@
 				<param key="uri" value="domains" />
 			</params>
 		</extension>
-		
-	</extensions> 
+
+	</extensions>
 </plugin>
