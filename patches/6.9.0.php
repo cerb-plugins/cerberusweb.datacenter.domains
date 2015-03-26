@@ -14,7 +14,7 @@ if(!isset($tables['datacenter_domain'])) {
 list($columns, $indexes) = $db->metaTable('datacenter_domain');
 
 if(!isset($columns['updated'])) {
-	$db->Execute("ALTER TABLE datacenter_domain ADD COLUMN updated INT UNSIGNED DEFAULT 0");
+	$db->ExecuteMaster("ALTER TABLE datacenter_domain ADD COLUMN updated INT UNSIGNED DEFAULT 0");
 }
 
 return TRUE;

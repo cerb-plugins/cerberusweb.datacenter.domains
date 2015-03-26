@@ -18,7 +18,7 @@ if(!isset($tables['datacenter_domain'])) {
 			INDEX server_id (server_id)
 		) ENGINE=%s;
 	", APP_DB_ENGINE);
-	$db->Execute($sql);
+	$db->ExecuteMaster($sql);
 
 	$tables['datacenter_domain'] = 'datacenter_domain';
 }

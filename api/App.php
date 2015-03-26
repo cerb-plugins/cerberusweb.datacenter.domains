@@ -26,8 +26,6 @@ class ChDomainsServerTab extends Extension_ContextProfileTab {
 			SearchFields_Domain::SERVER_ID => new DevblocksSearchCriteria(SearchFields_Domain::SERVER_ID, '=', $context_id),
 		), true);
 		
-		C4_AbstractViewLoader::setView($view_id, $view);
-
 		// Template
 		$tpl->display('devblocks:cerberusweb.datacenter.domains::server_tab/index.tpl');
 	}
@@ -178,6 +176,7 @@ class Page_Domains extends CerberusPageExtension {
 		// View
 		@$view_id = DevblocksPlatform::importGPC($_REQUEST['view_id'],'string');
 		$view = C4_AbstractViewLoader::getView($view_id);
+		$view->setAutoPersist(false);
 		
 		// Scheduled behavior
 		@$behavior_id = DevblocksPlatform::importGPC($_POST['behavior_id'],'string','');
@@ -267,7 +266,9 @@ class Page_Domains extends CerberusPageExtension {
 		
 		$active_worker = CerberusApplication::getActiveWorker();
 		$tpl_builder = DevblocksPlatform::getTemplateBuilder();
+		
 		$view = C4_AbstractViewLoader::getView($view_id);
+		$view->setAutoPersist(false);
 
 		$tpl = DevblocksPlatform::getTemplateService();
 		
@@ -390,6 +391,7 @@ class Page_Domains extends CerberusPageExtension {
 		
 		// Loop through view and get IDs
 		$view = C4_AbstractViewLoader::getView($view_id);
+		$view->setAutoPersist(false);
 
 		// Page start
 		@$explore_from = DevblocksPlatform::importGPC($_REQUEST['explore_from'],'integer',0);
