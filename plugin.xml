@@ -4,21 +4,21 @@
 	<name>Domains</name>
 	<description>This plugin adds Domain objects for managing webhosting/SaaS/On-Demand infrastructure.</description>
 	<author>Webgroup Media, LLC.</author>
-	<version>1.0.53</version>
+	<version>1.0.54</version>
 	<link>http://www.cerbweb.com/book/latest/plugins/cerberusweb.datacenter.domains.html</link>
 	<image>plugin.png</image>
 
  	<!-- Requirements -->
 
 	<requires>
-		<app_version min="6.9" max="6.9.99" />
+		<app_version min="7.0" max="7.0.99" />
 	</requires>
 
 	<!-- Plugin Dependencies -->
 
 	<dependencies>
-		<require plugin_id="cerberusweb.core" version="6.9.0" />
-		<require plugin_id="cerberusweb.datacenter.servers" version="6.9.0" />
+		<require plugin_id="cerberusweb.core" version="7.0.0" />
+		<require plugin_id="cerberusweb.datacenter.servers" version="7.0.0" />
 	</dependencies>
 
 	<!-- Patches -->
