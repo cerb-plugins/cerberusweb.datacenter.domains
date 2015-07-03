@@ -86,6 +86,13 @@
 
 <button type="button" onclick="genericAjaxPopupPostCloseReloadView(null,'frmDatacenterDomain','{$view_id}', false, 'datacenter_domain_save');"><span class="glyphicons glyphicons-circle-ok" style="color:rgb(0,180,0);"></span> {'common.save_changes'|devblocks_translate|capitalize}</button>
 {if $model->id && $active_worker->is_superuser}<button type="button" onclick="if(confirm('Permanently delete this domain?')) { this.form.do_delete.value='1';genericAjaxPopupPostCloseReloadView(null,'frmDatacenterDomain','{$view_id}'); } "><span class="glyphicons glyphicons-circle-minus" style="color:rgb(200,0,0);"></span> {'common.delete'|devblocks_translate|capitalize}</button>{/if}
+
+{if !empty($model->id)}
+<div style="float:right;">
+	<a href="{devblocks_url}c=profiles&type=domain&id={$model->id}-{$model->name|devblocks_permalink}{/devblocks_url}">view full record</a>
+</div>
+<br clear="all">
+{/if}
 </form>
 
 <script type="text/javascript">
