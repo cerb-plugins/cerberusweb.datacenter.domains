@@ -10,9 +10,8 @@ class ChDomainsServerTab extends Extension_ContextProfileTab {
 		// View
 		$view_id = 'server_domains';
 		
-		$defaults = new C4_AbstractViewModel();
+		$defaults = C4_AbstractViewModel::loadFromClass('View_Domain');
 		$defaults->id = $view_id;
-		$defaults->class_name = 'View_Domain';
 		
 		$view = C4_AbstractViewLoader::getView($view_id, $defaults);
 		$view->id = $view_id;
