@@ -1193,17 +1193,17 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 				$strings = array();
 
 				if(empty($values)) {
-					echo "(blank)";
+					echo DevblocksPlatform::strEscapeHtml("(blank)");
 					break;
 				}
 				
 				foreach($values as $val) {
 					if(empty($val))
-						$strings[] = "(none)";
+						$strings[] = DevblocksPlatform::strEscapeHtml("(none)");
 					elseif(!isset($servers[$val]))
 						continue;
 					else
-						$strings[] = $servers[$val]->name;
+						$strings[] = DevblocksPlatform::strEscapeHtml($servers[$val]->name);
 				}
 				echo implode(" or ", $strings);
 				break;

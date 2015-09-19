@@ -4,14 +4,14 @@
 	<name>Domains</name>
 	<description>This plugin adds Domain objects for managing webhosting/SaaS/On-Demand infrastructure.</description>
 	<author>Webgroup Media, LLC.</author>
-	<version>1.0.60</version>
+	<version>1.0.61</version>
 	<link>http://www.cerbweb.com/book/latest/plugins/cerberusweb.datacenter.domains.html</link>
 	<image>plugin.png</image>
 
  	<!-- Requirements -->
 
 	<requires>
-		<app_version min="7.0.3" max="7.0.99" />
+		<app_version min="7.1" max="7.1.99" />
 	</requires>
 
 	<!-- Plugin Dependencies -->
@@ -85,6 +85,12 @@
 				<name>Context_Domain</name>
 			</class>
 			<params>
+				<param key="names">
+					<value>
+						<data key="domain" value="singular" />
+						<data key="domains" value="plural" />
+					</value>
+				</param>
 				<param key="alias" value="domain" />
 				<param key="dao_class" value="DAO_Domain" />
 				<param key="view_class" value="View_Domain" />
