@@ -41,10 +41,11 @@
 			<td width="1%" nowrap="nowrap" valign="top"><b>Contacts:</b></td>
 			<td width="99%">
 				<button type="button" class="chooser_addy"><span class="glyphicons glyphicons-search"></span></button>
+				{* [TODO] Fix contact names *}
 				{if !empty($context_addresses)}
 				<ul class="chooser-container bubbles">
 					{foreach from=$context_addresses item=context_address key=context_address_id}
-					<li>{$context_address.a_first_name} {$context_address.a_last_name} &lt;{$context_address.a_email}&gt;<input type="hidden" name="contact_address_id[]" value="{$context_address_id}"><a href="javascript:;" onclick="$(this).parent().remove();"><span class="ui-icon ui-icon-trash" style="display:inline-block;width:14px;height:14px;"></span></a></li>
+					<li>{$context_address.a_first_name} {$context_address.a_last_name} &lt;{$context_address.a_email}&gt;<input type="hidden" name="contact_address_id[]" value="{$context_address_id}"><a href="javascript:;" onclick="$(this).parent().remove();"><span class="glyphicons glyphicons-circle-remove"></span></a></li>
 					{/foreach}
 				</ul>
 				{/if}
@@ -115,17 +116,6 @@
 		$('#frmDatacenterDomain button.chooser_addy').each(function() {
 			ajax.chooser(this,'cerberusweb.contexts.address','contact_address_id', { autocomplete:true });
 		});
-		
-		// Form hints
-		
-		$textarea
-			.focusin(function() {
-				$(this).siblings('div.cerb-form-hint').fadeIn();
-			})
-			.focusout(function() {
-				$(this).siblings('div.cerb-form-hint').fadeOut();
-			})
-			;
 		
 		// @mentions
 		
