@@ -255,7 +255,6 @@ class Page_Domains extends CerberusPageExtension {
 		}
 		
 		$view->doBulkUpdate($filter, $do, $ids);
-		
 		$view->render();
 		return;
 	}
