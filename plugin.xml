@@ -4,14 +4,14 @@
 	<name>Domains</name>
 	<description>This plugin adds Domain objects for managing webhosting/SaaS/On-Demand infrastructure.</description>
 	<author>Webgroup Media, LLC.</author>
-	<version>1.0.63</version>
+	<version>1.0.64</version>
 	<link>http://www.cerbweb.com/book/latest/plugins/cerberusweb.datacenter.domains.html</link>
 	<image>plugin.png</image>
 
  	<!-- Requirements -->
 
 	<requires>
-		<app_version min="7.1" max="7.1.99" />
+		<app_version min="7.1.2" max="7.1.99" />
 	</requires>
 
 	<!-- Plugin Dependencies -->
@@ -124,6 +124,25 @@
 						<data key="cerberusweb.contexts.group" />
 						<data key="cerberusweb.contexts.role" />
 						<data key="cerberusweb.contexts.worker" />
+					</value>
+				</param>
+			</params>
+		</extension>
+		
+		<!-- VA Actions -->
+		
+		<extension point="devblocks.event.action">
+			<id>va.action.create_domain</id>
+			<name>Create Domain</name>
+			<class>
+				<file>api/App.php</file>
+				<name>VaAction_CreateDomain</name>
+			</class>
+			<params>
+				<param key="label" value="Create domain" />
+				<param key="events">
+					<value>
+						<data key="*" />
 					</value>
 				</param>
 			</params>
