@@ -24,10 +24,10 @@
 
 		<!-- Macros -->
 		{devblocks_url assign=return_url full=true}c=profiles&type=domain&id={$domain->name|devblocks_permalink}-{$page_context_id}{/devblocks_url}
-		{include file="devblocks:cerberusweb.core::internal/macros/display/button.tpl" context=$page_context context_id=$page_context_id macros=$macros return_url=$return_url}		
+		{include file="devblocks:cerberusweb.core::internal/macros/display/button.tpl" context=$page_context context_id=$page_context_id macros=$macros return_url=$return_url}
 	
 		<!-- Edit -->
-		<button type="button" id="btnDatacenterDomainEdit" title="{'common.edit'|devblocks_translate|capitalize}"><span class="glyphicons glyphicons-cogwheel"></span></button>
+		<button type="button" id="btnDatacenterDomainEdit" title="{'common.edit'|devblocks_translate|capitalize}" class="cerb-peek-trigger" data-context="{CerberusContexts::CONTEXT_DOMAIN}" data-context-id="{$page_context_id}" data-edit="true"><span class="glyphicons glyphicons-cogwheel"></span></button>
 	</form>
 	
 	{if $pref_keyboard_shortcuts}
@@ -94,13 +94,23 @@ $(function() {
 	
 	var tabs = $("#profileDomainTabs").tabs(tabOptions);
 	
-	$('#btnDatacenterDomainEdit').bind('click', function() {
-		$popup = genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={$page_context}&context_id={$page_context_id}',null,false,'500');
-		$popup.one('datacenter_domain_save', function(event) {
-			event.stopPropagation();
-			document.location.href = '{devblocks_url}c=profiles&type=domain&id={$domain->name|devblocks_permalink}-{$page_context_id}{/devblocks_url}';
-		});
-	});
+	// Edit
+	
+	$('#btnDatacenterDomainEdit')
+		.cerbPeekTrigger()
+		.on('cerb-peek-opened', function(e) {
+		})
+		.on('cerb-peek-saved', function(e) {
+			e.stopPropagation();
+			document.location.reload();
+		})
+		.on('cerb-peek-deleted', function(e) {
+			document.location.href = '{devblocks_url}{/devblocks_url}';
+			
+		})
+		.on('cerb-peek-closed', function(e) {
+		})
+		;
 	
 	{include file="devblocks:cerberusweb.core::internal/macros/display/menu_script.tpl" selector_button=null selector_menu=null}
 });

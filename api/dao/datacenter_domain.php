@@ -315,41 +315,78 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$id = $context_id; // [TODO] Cleanup
 		
 		$tpl = DevblocksPlatform::getTemplateService();
+
 		$tpl->assign('view_id', $view_id);
-		
+
 		// Model
 		$model = null;
 		if(empty($id) || null == ($model = DAO_Domain::get($id)))
 			$model = new Model_Domain();
 		
-		$tpl->assign('model', $model);
 		
-		// Servers
-		$servers = DAO_Server::getAll();
-		$tpl->assign('servers', $servers);
+		if(empty($context_id) || $edit) {
+			$tpl->assign('model', $model);
+			
+			// Servers
+			$servers = DAO_Server::getAll();
+			$tpl->assign('servers', $servers);
+			
+			// Custom fields
+			$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN, false);
+			$tpl->assign('custom_fields', $custom_fields);
+	
+			$custom_field_values = DAO_CustomFieldValue::getValuesByContextIds(CerberusContexts::CONTEXT_DOMAIN, $id);
+			if(isset($custom_field_values[$id]))
+				$tpl->assign('custom_field_values', $custom_field_values[$id]);
+			
+			$types = Model_CustomField::getTypes();
+			$tpl->assign('types', $types);
+			
+			// Context: Addresses
+			$results = DAO_ContextLink::getContextLinks(CerberusContexts::CONTEXT_DOMAIN, $id, CerberusContexts::CONTEXT_ADDRESS);
+			if(isset($results[$id])) {
+				$contact_addresses = DAO_Address::getIds(array_keys($results[$id]));
+				$tpl->assign('contact_addresses', $contact_addresses);
+			}
+			
+			$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek_edit.tpl');
+			
+		} else {
+			// Counts
+			$activity_counts = array(
+				'comments' => DAO_Comment::count(CerberusContexts::CONTEXT_DOMAIN, $context_id),
+			);
+			$tpl->assign('activity_counts', $activity_counts);
+			
+			// Links
+			$links = array(
+				CerberusContexts::CONTEXT_DOMAIN => array(
+					$context_id => 
+						DAO_ContextLink::getContextLinkCounts(
+							CerberusContexts::CONTEXT_DOMAIN,
+							$context_id,
+							array(CerberusContexts::CONTEXT_WORKER, CerberusContexts::CONTEXT_CUSTOM_FIELDSET)
+						),
+				),
+			);
+			$tpl->assign('links', $links);
+			
+			// Dictionary
+			$labels = array();
+			$values = array();
+			CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, $model, $labels, $values, '', true, false);
+			$dict = DevblocksDictionaryDelegate::instance($values);
+			$tpl->assign('dict', $dict);
+			$tpl->assign('properties',
+				array(
+					'server__label',
+					'updated',
+				)
+			);
+			
+			$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek.tpl');
+		}
 		
-		// Custom fields
-		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN, false);
-		$tpl->assign('custom_fields', $custom_fields);
-
-		$custom_field_values = DAO_CustomFieldValue::getValuesByContextIds(CerberusContexts::CONTEXT_DOMAIN, $id);
-		if(isset($custom_field_values[$id]))
-			$tpl->assign('custom_field_values', $custom_field_values[$id]);
-		
-		$types = Model_CustomField::getTypes();
-		$tpl->assign('types', $types);
-		
-		// Context: Addresses
-		$context_addresses = Context_Address::searchInboundLinks(CerberusContexts::CONTEXT_DOMAIN, $id);
-		$tpl->assignByRef('context_addresses', $context_addresses);
-		
-		// Comments
-		$comments = DAO_Comment::getByContext(CerberusContexts::CONTEXT_DOMAIN, $id);
-		$comments = array_reverse($comments, true);
-		$tpl->assign('comments', $comments);
-		
-		// Render
-		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek.tpl');
 	}
 	
 	function importGetKeys() {
@@ -435,6 +472,9 @@ class DAO_Domain extends Cerb_ORMHelper {
 	static function create($fields) {
 		$db = DevblocksPlatform::getDatabaseService();
 		
+		if(!isset($fields[DAO_Domain::CREATED]))
+			$fields[DAO_Domain::CREATED] = time();
+		
 		$sql = "INSERT INTO datacenter_domain () VALUES ()";
 		$db->ExecuteMaster($sql);
 		$id = $db->LastInsertId();
@@ -490,6 +530,15 @@ class DAO_Domain extends Cerb_ORMHelper {
 		parent::_updateWhere('datacenter_domain', $fields, $where);
 	}
 	
+	static function countByServerId($server_id) {
+		$db = DevblocksPlatform::getDatabaseService();
+		
+		$sql = sprintf("SELECT count(id) FROM datacenter_domain WHERE server_id = %d",
+			$server_id
+		);
+		return intval($db->GetOneSlave($sql));
+	}
+	
 	/**
 	 * @param string $where
 	 * @param mixed $sortBy
@@ -528,6 +577,23 @@ class DAO_Domain extends Cerb_ORMHelper {
 		
 		if(isset($objects[$id]))
 			return $objects[$id];
+		
+		return null;
+	}
+	
+	static function getByName($name) {
+		if(empty($name))
+			return null;
+		
+		$results = self::getWhere(
+			sprintf("%s = %s", self::escape(DAO_Domain::NAME), self::qstr($name)),
+			null,
+			null,
+			1
+		);
+		
+		if(is_array($results) && !empty($results))
+			return array_shift($results);
 		
 		return null;
 	}
@@ -875,6 +941,16 @@ class Model_Domain {
 	public $server_id;
 	public $created;
 	public $updated;
+	
+	private $_server = null;
+	
+	function getServer() {
+		if($this->_server)
+			return $this->_server;
+		
+		$this->_server = DAO_Server::get($this->server_id);
+		return $this->_server;
+	}
 };
 
 class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IAbstractView_QuickSearch {

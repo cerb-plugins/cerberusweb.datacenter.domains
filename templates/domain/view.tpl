@@ -10,7 +10,7 @@
 	<tr>
 		<td nowrap="nowrap"><span class="title">{$view->name}</span></td>
 		<td nowrap="nowrap" align="right" class="title-toolbar">
-			<a href="javascript:;" title="{'common.add'|devblocks_translate|capitalize}" class="minimal" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={$view_context}&context_id=0&view_id={$view->id}',null,false,'500');"><span class="glyphicons glyphicons-circle-plus"></span></a>
+			<a href="javascript:;" title="{'common.add'|devblocks_translate|capitalize}" class="minimal cerb-peek-trigger" data-context="{$view_context}" data-context_id="0" data-edit="true"><span class="glyphicons glyphicons-circle-plus"></span></a>
 			<a href="javascript:;" title="{'common.search'|devblocks_translate|capitalize}" class="minimal" onclick="genericAjaxPopup('search','c=internal&a=viewShowQuickSearchPopup&view_id={$view->id}',null,false,'400');"><span class="glyphicons glyphicons-search"></span></a>
 			<a href="javascript:;" title="{'common.customize'|devblocks_translate|capitalize}" class="minimal" onclick="genericAjaxGet('customize{$view->id}','c=internal&a=viewCustomize&id={$view->id}');toggleDiv('customize{$view->id}','block');"><span class="glyphicons glyphicons-cogwheel"></span></a>
 			<a href="javascript:;" title="Subtotals" class="subtotals minimal"><span class="glyphicons glyphicons-signal"></span></a>
@@ -79,8 +79,8 @@
 			</td>
 			<td colspan="{$smarty.foreach.headers.total}">
 				<input type="checkbox" name="row_id[]" value="{$result.w_id}" style="display:none;">
-				<a href="{devblocks_url}c=profiles&type=domain&id={$result.w_name|devblocks_permalink}-{$result.w_id}{/devblocks_url}" class="subject">{$result.w_name}</a>
-				<button type="button" class="peek" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={CerberusContexts::CONTEXT_DOMAIN}&context_id={$result.w_id}&view_id={$view->id}',null,false,'500');"><span class="glyphicons glyphicons-new-window-alt"></span></button>
+				<a href="{devblocks_url}c=profiles&type=domain&id={$result.w_id}-{$result.w_name|devblocks_permalink}{/devblocks_url}" class="subject">{$result.w_name}</a>
+				<button type="button" class="peek cerb-peek-trigger" data-context="{CerberusContexts::CONTEXT_DOMAIN}" data-context-id="{$result.w_id}"><span class="glyphicons glyphicons-new-window-alt"></span></button>
 			</td>
 		</tr>
 		<tr class="{$tableRowClass}">
@@ -91,7 +91,7 @@
 				{if empty($servers)}{$servers = DAO_Server::getAll()}{/if}
 				<td>
 					{if !empty($result.$column) && isset($servers.{$result.$column})}
-						<a href="javascript:;" onclick="genericAjaxPopup('peek','c=internal&a=showPeekPopup&context={CerberusContexts::CONTEXT_SERVER}&context_id={$servers.{$result.$column}->id}&view_id={$view->id}',null,false,'500');">{$servers.{$result.$column}->name}</a>
+						<a href="javascript:;" class="cerb-peek-trigger" data-context="{CerberusContexts::CONTEXT_SERVER}" data-context-id="{$servers.{$result.$column}->id}">{$servers.{$result.$column}->name}</a>
 					{/if}
 				</td>
 			{elseif in_array($column, ["w_created", "w_updated"])}
