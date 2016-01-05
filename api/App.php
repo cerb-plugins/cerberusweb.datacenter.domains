@@ -32,6 +32,7 @@ class ChDomainsServerTab extends Extension_ContextProfileTab {
 endif;
 
 // Controller
+// [TODO] Move this to profiles
 class Page_Domains extends CerberusPageExtension {
 	function isVisible() {
 		// The current session must be a logged-in worker to use this page.
