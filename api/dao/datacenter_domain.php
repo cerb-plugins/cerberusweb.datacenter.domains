@@ -1,5 +1,5 @@
 <?php
-class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextProfile, IDevblocksContextPeek, IDevblocksContextImport {
+class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextProfile, IDevblocksContextPeek, IDevblocksContextImport, IDevblocksContextAutocomplete {
 	function getRandom() {
 		return DAO_Domain::random();
 	}
@@ -11,6 +11,33 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$url_writer = DevblocksPlatform::getUrlService();
 		$url = $url_writer->writeNoProxy('c=profiles&type=domain&id='.$context_id, true);
 		return $url;
+	}
+	
+	function autocomplete($term) {
+		$results = DAO_Domain::autocomplete($term);
+		$list = array();
+		
+		if(stristr('none', $term) || stristr('empty', $term) || stristr('null', $term)) {
+			$empty = new stdClass();
+			$empty->label = '(no domain)';
+			$empty->value = '0';
+			$empty->meta = array('desc' => 'Clear the domain');
+			$list[] = $empty;
+		}
+		
+		if(is_array($results))
+		foreach($results as $domain_id => $domain){
+			$entry = new stdClass();
+			$entry->label = $domain->name;
+			$entry->value = sprintf("%d", $domain_id);
+			
+			$meta = array();
+
+			$entry->meta = $meta;
+			$list[] = $entry;
+		}
+		
+		return $list;
 	}
 	
 	function getMeta($context_id) {
@@ -694,6 +721,24 @@ class DAO_Domain extends Cerb_ORMHelper {
 				self::_searchComponentsVirtualWatchers($param, $from_context, $from_index, $args['join_sql'], $args['where_sql'], $args['tables']);
 				break;
 		}
+	}
+
+	static function autocomplete($term) {
+		$db = DevblocksPlatform::getDatabaseService();
+		$ids = array();
+		
+		$results = $db->GetArraySlave(sprintf("SELECT id ".
+			"FROM datacenter_domain ".
+			"WHERE name LIKE %s ",
+			$db->qstr($term.'%')
+		));
+		
+		if(is_array($results))
+		foreach($results as $row) {
+			$ids[] = $row['id'];
+		}
+		
+		return DAO_Domain::getIds($ids);
 	}
 	
 	/**
