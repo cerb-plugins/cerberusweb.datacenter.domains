@@ -1459,75 +1459,79 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 
 		// Broadcast?
 		if(isset($do['broadcast'])) {
-			$tpl_builder = DevblocksPlatform::getTemplateBuilder();
-			
-			$params = $do['broadcast'];
-			if(
-				!isset($params['worker_id'])
-				|| empty($params['worker_id'])
-				|| !isset($params['subject'])
-				|| empty($params['subject'])
-				|| !isset($params['message'])
-				|| empty($params['message'])
-				)
-				break;
-
-			$is_queued = (isset($params['is_queued']) && $params['is_queued']) ? true : false;
-			$next_is_closed = (isset($params['next_is_closed'])) ? intval($params['next_is_closed']) : 0;
-			
-			if(is_array($ids))
-			foreach($ids as $domain_id) {
-				$addresses = Context_Address::searchInboundLinks(CerberusContexts::CONTEXT_DOMAIN, $domain_id);
+			try {
+				$tpl_builder = DevblocksPlatform::getTemplateBuilder();
 				
-				foreach($addresses as $address_id => $address) {
-					try {
-						if($address[SearchFields_Address::IS_DEFUNCT])
-							continue;
-						
-						CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, array('id'=>$domain_id,'address_id'=>$address_id), $tpl_labels, $tpl_tokens);
-						
-						$tpl_dict = new DevblocksDictionaryDelegate($tpl_tokens);
-						
-						$subject = $tpl_builder->build($params['subject'], $tpl_dict);
-						$body = $tpl_builder->build($params['message'], $tpl_dict);
-						
-						$json_params = array(
-							'to' => $tpl_dict->contact_address,
-							'group_id' => $params['group_id'],
-							'next_is_closed' => $next_is_closed,
-							'is_broadcast' => 1,
-							'context_links' => array(
-								array(CerberusContexts::CONTEXT_DOMAIN, $domain_id),
-							),
-						);
-						
-						if(isset($params['format']))
-							$json_params['format'] = $params['format'];
-						
-						if(isset($params['html_template_id']))
-							$json_params['html_template_id'] = intval($params['html_template_id']);
-						
-						$fields = array(
-							DAO_MailQueue::TYPE => Model_MailQueue::TYPE_COMPOSE,
-							DAO_MailQueue::TICKET_ID => 0,
-							DAO_MailQueue::WORKER_ID => $params['worker_id'],
-							DAO_MailQueue::UPDATED => time(),
-							DAO_MailQueue::HINT_TO => $tpl_dict->contact_address,
-							DAO_MailQueue::SUBJECT => $subject,
-							DAO_MailQueue::BODY => $body,
-							DAO_MailQueue::PARAMS_JSON => json_encode($json_params),
-						);
-						
-						if($is_queued) {
-							$fields[DAO_MailQueue::IS_QUEUED] = 1;
+				$params = $do['broadcast'];
+				if(
+					!isset($params['worker_id'])
+					|| empty($params['worker_id'])
+					|| !isset($params['subject'])
+					|| empty($params['subject'])
+					|| !isset($params['message'])
+					|| empty($params['message'])
+					)
+					throw new Exception("Missing parameters for broadcast.");
+	
+				$is_queued = (isset($params['is_queued']) && $params['is_queued']) ? true : false;
+				$status_id = intval(@$params['status_id']);
+				
+				if(is_array($ids))
+				foreach($ids as $domain_id) {
+					$addresses = Context_Address::searchInboundLinks(CerberusContexts::CONTEXT_DOMAIN, $domain_id);
+					
+					foreach($addresses as $address_id => $address) {
+						try {
+							if($address[SearchFields_Address::IS_DEFUNCT])
+								continue;
+							
+							CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, array('id'=>$domain_id,'address_id'=>$address_id), $tpl_labels, $tpl_tokens);
+							
+							$tpl_dict = new DevblocksDictionaryDelegate($tpl_tokens);
+							
+							$subject = $tpl_builder->build($params['subject'], $tpl_dict);
+							$body = $tpl_builder->build($params['message'], $tpl_dict);
+							
+							$json_params = array(
+								'to' => $tpl_dict->contact_address,
+								'group_id' => $params['group_id'],
+								'status_id' => $status_id,
+								'is_broadcast' => 1,
+								'context_links' => array(
+									array(CerberusContexts::CONTEXT_DOMAIN, $domain_id),
+								),
+							);
+							
+							if(isset($params['format']))
+								$json_params['format'] = $params['format'];
+							
+							if(isset($params['html_template_id']))
+								$json_params['html_template_id'] = intval($params['html_template_id']);
+							
+							$fields = array(
+								DAO_MailQueue::TYPE => Model_MailQueue::TYPE_COMPOSE,
+								DAO_MailQueue::TICKET_ID => 0,
+								DAO_MailQueue::WORKER_ID => $params['worker_id'],
+								DAO_MailQueue::UPDATED => time(),
+								DAO_MailQueue::HINT_TO => $tpl_dict->contact_address,
+								DAO_MailQueue::SUBJECT => $subject,
+								DAO_MailQueue::BODY => $body,
+								DAO_MailQueue::PARAMS_JSON => json_encode($json_params),
+							);
+							
+							if($is_queued) {
+								$fields[DAO_MailQueue::IS_QUEUED] = 1;
+							}
+							
+							$draft_id = DAO_MailQueue::create($fields);
+							
+						} catch (Exception $e) {
+							// [TODO] ...
 						}
-						
-						$draft_id = DAO_MailQueue::create($fields);
-						
-					} catch (Exception $e) {
-						// [TODO] ...
 					}
 				}
+			} catch (Exception $e) {
+				
 			}
 		}
 		
