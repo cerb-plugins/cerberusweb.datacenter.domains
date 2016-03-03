@@ -42,7 +42,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 
 		if(!empty($domain->server_id)) {
 			$properties['server'] = array(
-				'label' => ucfirst($translate->_('cerberusweb.datacenter.common.server')),
+				'label' => mb_ucfirst($translate->_('cerberusweb.datacenter.common.server')),
 				'type' => Model_CustomField::TYPE_LINK,
 				'params' => array('context' => CerberusContexts::CONTEXT_SERVER),
 				'value' => $domain->server_id,
@@ -50,13 +50,13 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		}
 
 		$properties['created'] = array(
-			'label' => ucfirst($translate->_('common.created')),
+			'label' => mb_ucfirst($translate->_('common.created')),
 			'type' => Model_CustomField::TYPE_DATE,
 			'value' => $domain->created,
 		);
 		
 		$properties['updated'] = array(
-			'label' => ucfirst($translate->_('common.updated')),
+			'label' => mb_ucfirst($translate->_('common.updated')),
 			'type' => Model_CustomField::TYPE_DATE,
 			'value' => $domain->updated,
 		);

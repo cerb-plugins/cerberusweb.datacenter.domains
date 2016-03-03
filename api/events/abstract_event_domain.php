@@ -13,9 +13,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 			// Pull the latest record
 			list($results) = DAO_Domain::search(
 				array(),
-				array(
-					//new DevblocksSearchCriteria(SearchFields_Domain::IS_CLOSED,'=',0),
-				),
+				array(),
 				10,
 				0,
 				SearchFields_Domain::ID,
@@ -363,8 +361,6 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 			case 'create_ticket':
 				return DevblocksEventHelper::simulateActionCreateTicket($params, $dict, 'domain_id');
 				break;
-				
-				
 				
 			case 'send_email':
 				return DevblocksEventHelper::simulateActionSendEmail($params, $dict);
