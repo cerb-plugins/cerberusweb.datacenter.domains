@@ -485,7 +485,7 @@ class Page_Domains extends CerberusPageExtension {
 				$model->pos = $pos++;
 				$model->params = array(
 					'id' => $id,
-					'url' => $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%s-%d", DevblocksPlatform::strToPermalink($row[SearchFields_Domain::NAME]), $id), true),
+					'url' => $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%d-%s", $id, DevblocksPlatform::strToPermalink($row[SearchFields_Domain::NAME])), true),
 				);
 				$models[] = $model;
 			}

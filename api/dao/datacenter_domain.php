@@ -671,7 +671,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	public static function getSearchQueryComponents($columns, $params, $sortBy=null, $sortAsc=null) {
 		$fields = SearchFields_Domain::getFields();
 		
-		list($tables, $wheres) = parent::_parseSearchParams($params, $columns, $fields, $sortBy);
+		list($tables, $wheres) = parent::_parseSearchParams($params, $columns, $fields, $sortBy, array(), 'datacenter_domain.id');
 		
 		$select_sql = sprintf("SELECT ".
 			"datacenter_domain.id as %s, ".
