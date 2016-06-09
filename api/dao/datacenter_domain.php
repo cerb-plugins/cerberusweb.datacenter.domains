@@ -1048,6 +1048,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 	function getSubtotalCounts($column) {
 		$counts = array();
 		$fields = $this->getFields();
+		$context = CerberusContexts::CONTEXT_DOMAIN;
 
 		if(!isset($fields[$column]))
 			return array();
@@ -1060,25 +1061,25 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 				);
 				foreach($servers as $server_id => $server)
 					$label_map[$server_id] = $server->name;
-				$counts = $this->_getSubtotalCountForStringColumn('DAO_Domain', $column, $label_map, 'in', 'options[]');
+				$counts = $this->_getSubtotalCountForStringColumn($context, $column, $label_map, 'in', 'options[]');
 				break;
 
 			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
-				$counts = $this->_getSubtotalCountForContextLinkColumn('DAO_Domain', CerberusContexts::CONTEXT_DOMAIN, $column);
+				$counts = $this->_getSubtotalCountForContextLinkColumn($context, $column);
 				break;
 				
 			case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
-				$counts = $this->_getSubtotalCountForHasFieldsetColumn('DAO_Domain', CerberusContexts::CONTEXT_DOMAIN, $column);
+				$counts = $this->_getSubtotalCountForHasFieldsetColumn($context, $column);
 				break;
 				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
-				$counts = $this->_getSubtotalCountForWatcherColumn('DAO_Domain', $column);
+				$counts = $this->_getSubtotalCountForWatcherColumn($context, $column);
 				break;
 				
 			default:
 				// Custom fields
 				if('cf_' == substr($column,0,3)) {
-					$counts = $this->_getSubtotalCountForCustomColumn('DAO_Domain', $column, 'datacenter_domain.id');
+					$counts = $this->_getSubtotalCountForCustomColumn($context, $column);
 				}
 				
 				break;
