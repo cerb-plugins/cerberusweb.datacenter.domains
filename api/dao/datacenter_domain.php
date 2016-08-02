@@ -536,6 +536,72 @@ class DAO_Domain extends Cerb_ORMHelper {
 		parent::_updateWhere('datacenter_domain', $fields, $where);
 	}
 	
+	/**
+	 * @param Model_ContextBulkUpdate $update
+	 * @return boolean
+	 */
+	static function bulkUpdate(Model_ContextBulkUpdate $update) {
+		$do = $update->actions;
+		$ids = $update->context_ids;
+
+		// Make sure we have actions
+		if(empty($ids) || empty($do))
+			return false;
+		
+		$update->markInProgress();
+		
+		$change_fields = array();
+		$custom_fields = array();
+		$deleted = false;
+
+		if(is_array($do))
+		foreach($do as $k => $v) {
+			switch($k) {
+				case 'delete':
+					$deleted = true;
+					break;
+					
+				case 'server_id':
+					$change_fields[DAO_Domain::SERVER_ID] = $v;
+					break;
+					
+				default:
+					// Custom fields
+					if(substr($k,0,3)=="cf_") {
+						$custom_fields[substr($k,3)] = $v;
+					}
+					break;
+			}
+		}
+
+		if(!$deleted) {
+			if(!empty($change_fields))
+				DAO_Domain::update($ids, $change_fields);
+
+			// Custom Fields
+			if(!empty($custom_fields))
+				C4_AbstractView::_doBulkSetCustomFields(CerberusContexts::CONTEXT_DOMAIN, $custom_fields, $ids);
+			
+			// Scheduled behavior
+			if(isset($do['behavior']))
+				C4_AbstractView::_doBulkScheduleBehavior(CerberusContexts::CONTEXT_DOMAIN, $do['behavior'], $ids);
+			
+			// Watchers
+			if(isset($do['watchers']))
+				C4_AbstractView::_doBulkChangeWatchers(CerberusContexts::CONTEXT_DOMAIN, $do['watchers'], $ids);
+			
+			// Broadcast
+			if(isset($do['broadcast']))
+				C4_AbstractView::_doBulkBroadcast(CerberusContexts::CONTEXT_DOMAIN, $do['broadcast'], $ids, 'address');
+			
+		} else {
+			DAO_Domain::delete($ids);
+		}
+		
+		$update->markCompleted();
+		return true;
+	}
+	
 	static function countByServerId($server_id) {
 		$db = DevblocksPlatform::getDatabaseService();
 		
@@ -1410,169 +1476,4 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 			$this->renderPage = 0;
 		}
 	}
-		
-	function doBulkUpdate($filter, $do, $ids=array()) {
-		@set_time_limit(600); // 10m
-		
-		$change_fields = array();
-		$custom_fields = array();
-		$deleted = false;
-
-		// Make sure we have actions
-		if(empty($do))
-			return;
-
-		// Make sure we have checked items if we want a checked list
-		if(0 == strcasecmp($filter,"checks") && empty($ids))
-			return;
-			
-		if(is_array($do))
-		foreach($do as $k => $v) {
-			switch($k) {
-				case 'delete':
-					$deleted = true;
-					break;
-				case 'server_id':
-					$change_fields[DAO_Domain::SERVER_ID] = $v;
-					break;
-				default:
-					// Custom fields
-					if(substr($k,0,3)=="cf_") {
-						$custom_fields[substr($k,3)] = $v;
-					}
-					break;
-			}
-		}
-
-		$pg = 0;
-
-		if(empty($ids))
-		do {
-			list($objects,$null) = DAO_Domain::search(
-				array(),
-				$this->getParams(),
-				100,
-				$pg++,
-				SearchFields_Domain::ID,
-				true,
-				false
-			);
-			$ids = array_merge($ids, array_keys($objects));
-			 
-		} while(!empty($objects));
-
-		// Broadcast?
-		if(isset($do['broadcast'])) {
-			try {
-				$tpl_builder = DevblocksPlatform::getTemplateBuilder();
-				
-				$params = $do['broadcast'];
-				if(
-					!isset($params['worker_id'])
-					|| empty($params['worker_id'])
-					|| !isset($params['subject'])
-					|| empty($params['subject'])
-					|| !isset($params['message'])
-					|| empty($params['message'])
-					)
-					throw new Exception("Missing parameters for broadcast.");
-	
-				$is_queued = (isset($params['is_queued']) && $params['is_queued']) ? true : false;
-				$status_id = intval(@$params['status_id']);
-				
-				if(is_array($ids))
-				foreach($ids as $domain_id) {
-					$addresses = Context_Address::searchInboundLinks(CerberusContexts::CONTEXT_DOMAIN, $domain_id);
-					
-					foreach($addresses as $address_id => $address) {
-						try {
-							if($address[SearchFields_Address::IS_DEFUNCT])
-								continue;
-							
-							CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, array('id'=>$domain_id,'address_id'=>$address_id), $tpl_labels, $tpl_tokens);
-							
-							$tpl_dict = new DevblocksDictionaryDelegate($tpl_tokens);
-							
-							$subject = $tpl_builder->build($params['subject'], $tpl_dict);
-							$body = $tpl_builder->build($params['message'], $tpl_dict);
-							
-							$json_params = array(
-								'to' => $tpl_dict->contact_address,
-								'group_id' => $params['group_id'],
-								'status_id' => $status_id,
-								'is_broadcast' => 1,
-								'context_links' => array(
-									array(CerberusContexts::CONTEXT_DOMAIN, $domain_id),
-								),
-							);
-							
-							if(isset($params['format']))
-								$json_params['format'] = $params['format'];
-							
-							if(isset($params['html_template_id']))
-								$json_params['html_template_id'] = intval($params['html_template_id']);
-							
-							$fields = array(
-								DAO_MailQueue::TYPE => Model_MailQueue::TYPE_COMPOSE,
-								DAO_MailQueue::TICKET_ID => 0,
-								DAO_MailQueue::WORKER_ID => $params['worker_id'],
-								DAO_MailQueue::UPDATED => time(),
-								DAO_MailQueue::HINT_TO => $tpl_dict->contact_address,
-								DAO_MailQueue::SUBJECT => $subject,
-								DAO_MailQueue::BODY => $body,
-								DAO_MailQueue::PARAMS_JSON => json_encode($json_params),
-							);
-							
-							if($is_queued) {
-								$fields[DAO_MailQueue::IS_QUEUED] = 1;
-							}
-							
-							$draft_id = DAO_MailQueue::create($fields);
-							
-						} catch (Exception $e) {
-							// [TODO] ...
-						}
-					}
-				}
-			} catch (Exception $e) {
-				
-			}
-		}
-		
-		$batch_total = count($ids);
-		for($x=0;$x<=$batch_total;$x+=100) {
-			$batch_ids = array_slice($ids,$x,100);
-			if(!$deleted) {
-				DAO_Domain::update($batch_ids, $change_fields);
-	
-				// Custom Fields
-				self::_doBulkSetCustomFields(CerberusContexts::CONTEXT_DOMAIN, $custom_fields, $batch_ids);
-				
-				// Scheduled behavior
-				if(isset($do['behavior']) && is_array($do['behavior'])) {
-					$behavior_id = $do['behavior']['id'];
-					@$behavior_when = strtotime($do['behavior']['when']) or time();
-					@$behavior_params = isset($do['behavior']['params']) ? $do['behavior']['params'] : array();
-					
-					if(!empty($batch_ids) && !empty($behavior_id))
-					foreach($batch_ids as $batch_id) {
-						DAO_ContextScheduledBehavior::create(array(
-							DAO_ContextScheduledBehavior::BEHAVIOR_ID => $behavior_id,
-							DAO_ContextScheduledBehavior::CONTEXT => CerberusContexts::CONTEXT_DOMAIN,
-							DAO_ContextScheduledBehavior::CONTEXT_ID => $batch_id,
-							DAO_ContextScheduledBehavior::RUN_DATE => $behavior_when,
-							DAO_ContextScheduledBehavior::VARIABLES_JSON => json_encode($behavior_params),
-						));
-					}
-				}
-			} else {
-				DAO_Domain::delete($batch_ids);
-			}
-			
-			unset($batch_ids);
-		}
-
-		unset($ids);
-	}
 };
-

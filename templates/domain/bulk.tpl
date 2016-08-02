@@ -1,6 +1,8 @@
 <form action="{devblocks_url}{/devblocks_url}" method="POST" id="formBatchUpdate" name="formBatchUpdate" onsubmit="return false;">
-<input type="hidden" name="c" value="datacenter.domains">
-<input type="hidden" name="a" value="doDomainBulkUpdate">
+<input type="hidden" name="c" value="profiles">
+<input type="hidden" name="a" value="handleSectionAction">
+<input type="hidden" name="section" value="domain">
+<input type="hidden" name="action" value="startBulkUpdateJson">
 <input type="hidden" name="view_id" value="{$view_id}">
 <input type="hidden" name="ids" value="{$ids}">
 <input type="hidden" name="_csrf_token" value="{$session.csrf_token}">
@@ -112,17 +114,23 @@
 
 <script type="text/javascript">
 $(function() {
-	var $popup = genericAjaxPopupFetch('peek');
+	var $frm = $('#formBatchUpdate');
+	var $popup = genericAjaxPopupFind($frm);
 	
 	$popup.one('popup_open', function(event,ui) {
-		var $this = $(this);
 		$popup.dialog('option','title',"{'common.bulk_update'|devblocks_translate|capitalize|escape:'javascript' nofilter}");
 		
-		var $frm = $('#formBatchUpdate');
-		var $content = $frm.find('textarea[name=broadcast_message]');
+		var $content = $popup.find('textarea[name=broadcast_message]');
 		
 		$popup.find('button.submit').click(function() {
-			genericAjaxPost('formBatchUpdate', 'view{$view_id}', null, function() {
+			genericAjaxPost('formBatchUpdate', '', null, function(json) {
+				if(json.cursor) {
+					// Pull the cursor
+					var $tips = $('#{$view_id}_tips').html('');
+					var $spinner = $('<span class="cerb-ajax-spinner"/>').appendTo($tips);
+					genericAjaxGet($tips, 'c=internal&a=viewBulkUpdateWithCursor&view_id={$view_id}&cursor=' + json.cursor);
+				}
+				
 				genericAjaxPopupClose($popup);
 			});
 		});
