@@ -68,61 +68,74 @@
 	<input type="hidden" name="broadcast_format" value="">
 	
 	<blockquote id="bulkDatacenterDomainBroadcast" style="display:none;margin:10px;">
-		<b>From:</b> <br>
-		<select name="broadcast_group_id">
-			{foreach from=$groups item=group key=group_id}
-			{if $active_worker_memberships.$group_id}
-			<option value="{$group->id}">{$group->name}</option>
-			{/if}
-			{/foreach}
-		</select>
-		<br>
+		<b>From:</b>
 		
-		<b>Subject:</b><br>
-		<input type="text" name="broadcast_subject" value="" style="width:100%;border:1px solid rgb(180,180,180);padding:2px;">
-		<br>
-		
-		<b>Compose:</b><br>
-		<textarea name="broadcast_message" style="width:100%;height:200px;border:1px solid rgb(180,180,180);padding:2px;"></textarea>
-		
-		<div>
-			<button type="button" class="cerb-popupmenu-trigger" onclick="">Insert placeholder &#x25be;</button>
-			<button type="button" onclick="ajax.chooserSnippet('snippets',$('#bulkDatacenterDomainBroadcast textarea[name=broadcast_message]'), { 'cerberusweb.contexts.datacenter.domain':'', '{CerberusContexts::CONTEXT_WORKER}':'{$active_worker->id}' });">{'common.snippets'|devblocks_translate|capitalize}</button>
-			
-			{$types = $values._types}
-			{function tree level=0}
-				{foreach from=$keys item=data key=idx}
-					{if is_array($data)}
-						<li>
-							<div>{$idx|capitalize}</div>
-							<ul>
-								{tree keys=$data level=$level+1}
-							</ul>
-						</li>
-					{else}
-						{$type = $types.{$data->key}}
-						<li data-token="{$data->key}{if $type == Model_CustomField::TYPE_DATE}|date{/if}" data-label="{$data->label}"><div style="font-weight:bold;">{$data->l|capitalize}</div></li>
-					{/if}
+		<div style="margin:0px 0px 5px 10px;">
+			<select name="broadcast_group_id">
+				{foreach from=$groups item=group key=group_id}
+				{if $active_worker_memberships.$group_id}
+				<option value="{$group->id}">{$group->name}</option>
+				{/if}
 				{/foreach}
-			{/function}
-			
-			<br>
-			
-			<ul class="menu" style="width:150px;">
-			{tree keys=$placeholders}
-			</ul>
-			
+			</select>
 		</div>
 		
-		<b>{'common.options'|devblocks_translate|capitalize}:</b> 
-		<label><input type="radio" name="broadcast_is_queued" value="0" checked="checked"> Save as drafts</label>
-		<label><input type="radio" name="broadcast_is_queued" value="1"> Send now</label>
-		<br>
+		<b>Subject:</b>
 		
-		<b>{'common.status'|devblocks_translate|capitalize}:</b> 
-		<label><input type="radio" name="broadcast_status_id" value="{Model_Ticket::STATUS_OPEN}"> {'status.open'|devblocks_translate|capitalize}</label>
-		<label><input type="radio" name="broadcast_status_id" value="{Model_Ticket::STATUS_WAITING}" checked="checked"> {'status.waiting'|devblocks_translate|capitalize}</label>
-		<label><input type="radio" name="broadcast_status_id" value="{Model_Ticket::STATUS_CLOSED}"> {'status.closed'|devblocks_translate|capitalize}</label>
+		<div style="margin:0px 0px 5px 10px;">
+			<input type="text" name="broadcast_subject" value="" style="width:100%;border:1px solid rgb(180,180,180);padding:2px;">
+		</div>
+		
+		<b>Compose:</b>
+		
+		<div style="margin:0px 0px 5px 10px;">
+			<textarea name="broadcast_message" style="width:100%;height:200px;"></textarea>
+			
+			<div>
+				<button type="button" class="cerb-popupmenu-trigger" onclick="">Insert placeholder &#x25be;</button>
+				<button type="button" onclick="ajax.chooserSnippet('snippets',$('#bulkDatacenterDomainBroadcast textarea[name=broadcast_message]'), { 'cerberusweb.contexts.datacenter.domain':'', '{CerberusContexts::CONTEXT_WORKER}':'{$active_worker->id}' });">{'common.snippets'|devblocks_translate|capitalize}</button>
+				
+				{$types = $values._types}
+				{function tree level=0}
+					{foreach from=$keys item=data key=idx}
+						{if is_array($data)}
+							<li>
+								<div>{$idx|capitalize}</div>
+								<ul>
+									{tree keys=$data level=$level+1}
+								</ul>
+							</li>
+						{else}
+							{$type = $types.{$data->key}}
+							<li data-token="{$data->key}{if $type == Model_CustomField::TYPE_DATE}|date{/if}" data-label="{$data->label}"><div style="font-weight:bold;">{$data->l|capitalize}</div></li>
+						{/if}
+					{/foreach}
+				{/function}
+				
+				<ul class="menu" style="width:150px;">
+				{tree keys=$placeholders}
+				</ul>
+			</div>
+		</div>
+		
+		<b>{'common.attachments'|devblocks_translate|capitalize}:</b>
+		<div style="margin:0px 0px 5px 10px;">
+			<button type="button" class="chooser_file"><span class="glyphicons glyphicons-paperclip"></span></button>
+			<ul class="bubbles chooser-container">
+		</div>
+		
+		<b>{'common.options'|devblocks_translate|capitalize}:</b>
+		<div style="margin:0px 0px 5px 10px;">
+			<label><input type="radio" name="broadcast_is_queued" value="0" checked="checked"> Save as drafts</label>
+			<label><input type="radio" name="broadcast_is_queued" value="1"> Send now</label>
+		</div>
+		
+		<b>{'common.status'|devblocks_translate|capitalize}:</b>
+		<div style="margin:0px 0px 5px 10px;">
+			<label><input type="radio" name="broadcast_status_id" value="{Model_Ticket::STATUS_OPEN}"> {'status.open'|devblocks_translate|capitalize}</label>
+			<label><input type="radio" name="broadcast_status_id" value="{Model_Ticket::STATUS_WAITING}" checked="checked"> {'status.waiting'|devblocks_translate|capitalize}</label>
+			<label><input type="radio" name="broadcast_status_id" value="{Model_Ticket::STATUS_CLOSED}"> {'status.closed'|devblocks_translate|capitalize}</label>
+		</div>
 	</blockquote>
 
 </fieldset>
