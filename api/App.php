@@ -79,21 +79,27 @@ class Page_Domains extends CerberusPageExtension {
 				
 			} else {
 				try {
-					// Pull one of the addresses on this row
-					$addresses = Context_Address::searchInboundLinks(CerberusContexts::CONTEXT_DOMAIN, current($results));
+					// Try to build the template
+					CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, current($results), $token_labels, $token_values);
+					$dict = DevblocksDictionaryDelegate::instance($token_values);
 					
-					if(empty($addresses)) {
+					// Load the contacts from a CSV placeholder
+					$contacts = CerberusMail::parseRfcAddresses($dict->contacts_list);
+					
+					if(empty($contacts)) {
 						$success = false;
 						$output = "This row has no associated addresses. Try again.";
 						throw new Exception();
 					}
-	
+					
+					shuffle($contacts);
+					
 					// Randomize the address
-					@$addy = DAO_Address::get(array_rand($addresses, 1));
-	
-					// Try to build the template
-					CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, array('id'=>current($results),'address_id'=>$addy->id), $token_labels, $token_values);
-	
+					$contact = DAO_Address::lookupAddress($contacts[0]['email'], true);
+					
+					$dict->contact__context = CerberusContexts::CONTEXT_ADDRESS;
+					$dict->contact_id = $contact->id;
+					
 					if(empty($broadcast_subject)) {
 						$success = false;
 						$output = "Subject is blank.";
@@ -101,7 +107,7 @@ class Page_Domains extends CerberusPageExtension {
 					} else {
 						$template = "Subject: $broadcast_subject\n\n$broadcast_message";
 						
-						if(false === ($out = $tpl_builder->build($template, $token_values))) {
+						if(false === ($out = $tpl_builder->build($template, $dict))) {
 							// If we failed, show the compile errors
 							$errors = $tpl_builder->getErrors();
 							$success = false;

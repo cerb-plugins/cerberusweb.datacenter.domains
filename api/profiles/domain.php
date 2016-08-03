@@ -273,13 +273,15 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		$custom_fields = DAO_CustomField::getByContext(CerberusContexts::CONTEXT_DOMAIN, false);
 		$tpl->assign('custom_fields', $custom_fields);
 		
-		// Broadcast
-		CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, null, $token_labels, $token_values);
-		$tpl->assign('token_labels', $token_labels);
-		
 		// HTML templates
 		$html_templates = DAO_MailHtmlTemplate::getAll();
 		$tpl->assign('html_templates', $html_templates);
+		
+		// Broadcast
+		CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, null, $token_labels, $token_values);
+		
+		$placeholders = Extension_DevblocksContext::getPlaceholderTree($token_labels);
+		$tpl->assign('placeholders', $placeholders);
 		
 		// Macros
 		

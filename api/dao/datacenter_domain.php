@@ -592,7 +592,26 @@ class DAO_Domain extends Cerb_ORMHelper {
 			
 			// Broadcast
 			if(isset($do['broadcast']))
-				C4_AbstractView::_doBulkBroadcast(CerberusContexts::CONTEXT_DOMAIN, $do['broadcast'], $ids, 'address');
+				C4_AbstractView::_doBulkBroadcast(CerberusContexts::CONTEXT_DOMAIN, $do['broadcast'], $ids, 'contacts_list', array(
+					'callback_recipient_expand' => function(array $to, DevblocksDictionaryDelegate $dict) {
+						if(false == ($model = CerberusApplication::hashLookupAddress($to['email'], true)))
+							return false;
+						
+						// Remove an existing contact
+						$dict->scrubKeys('contact_');
+						
+						// Prime the new contact
+						$dict->contact__context = CerberusContexts::CONTEXT_ADDRESS;
+						$dict->contact_id = $model->id;
+					},
+					'callback_recipient_reject' => function(DevblocksDictionaryDelegate $dict) {
+						if($dict->contact_is_defunct || $dict->contact_is_banned) {
+							return true;
+						}
+						
+						return false;
+					}
+				));
 			
 		} else {
 			DAO_Domain::delete($ids);
