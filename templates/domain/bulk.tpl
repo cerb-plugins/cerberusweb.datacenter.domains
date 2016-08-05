@@ -165,7 +165,7 @@ $(function() {
 			});
 		});
 		
-		{include file="devblocks:cerberusweb.core::internal/views/bulk_broadcast.tpl"}
+		{include file="devblocks:cerberusweb.core::internal/views/bulk_broadcast_jquery.tpl"}
 	});
 });
 </script>
