@@ -4,21 +4,21 @@
 	<name>Domains</name>
 	<description>This plugin adds Domain objects for managing webhosting/SaaS/On-Demand infrastructure.</description>
 	<author>Webgroup Media, LLC.</author>
-	<version>1.1.8</version>
+	<version>1.1.9</version>
 	<link>http://www.cerbweb.com/book/latest/plugins/cerberusweb.datacenter.domains.html</link>
 	<image>plugin.png</image>
 
  	<!-- Requirements -->
 
 	<requires>
-		<app_version min="7.2" max="7.2.99" />
+		<app_version min="7.3" max="7.3.99" />
 	</requires>
 
 	<!-- Plugin Dependencies -->
 
 	<dependencies>
-		<require plugin_id="cerberusweb.core" version="7.0.0" />
-		<require plugin_id="cerberusweb.datacenter.servers" version="7.0.0" />
+		<require plugin_id="cerberusweb.core" version="7.3.0" />
+		<require plugin_id="cerberusweb.datacenter.servers" version="7.3.0" />
 	</dependencies>
 
 	<!-- Patches -->
@@ -31,7 +31,7 @@
 	<!-- Exported Classes -->
 
 	<class_loader>
-		<file path="api/dao/datacenter_domain.php">
+		<file path="api/dao/domain.php">
 			<class name="Context_Domain" />
 			<class name="DAO_Domain" />
 			<class name="Model_Domain" />
@@ -81,7 +81,7 @@
 			<id>cerberusweb.contexts.datacenter.domain</id>
 			<name>Domain</name>
 			<class>
-				<file>api/dao/datacenter_domain.php</file>
+				<file>api/dao/domain.php</file>
 				<name>Context_Domain</name>
 			</class>
 			<params>
@@ -96,10 +96,12 @@
 				<param key="view_class" value="View_Domain" />
 				<param key="options">
 					<value>
+						<data key="autocomplete" />
 						<data key="cards" />
 						<data key="create" />
 						<data key="custom_fields" />
-						<data key="find" />
+						<data key="links" />
+						<data key="search" />
 						<data key="snippets" />
 						<data key="va_variable" />
 						<data key="workspace" />

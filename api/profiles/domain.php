@@ -56,7 +56,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		);
 		
 		$properties['updated'] = array(
-			'label' => mb_ucfirst($translate->_('common.updated')),
+			'label' => DevblocksPlatform::translateCapitalized('common.updated'),
 			'type' => Model_CustomField::TYPE_DATE,
 			'value' => $domain->updated,
 		);
@@ -84,7 +84,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 					DAO_ContextLink::getContextLinkCounts(
 						CerberusContexts::CONTEXT_DOMAIN,
 						$domain->id,
-						array(CerberusContexts::CONTEXT_WORKER, CerberusContexts::CONTEXT_CUSTOM_FIELDSET)
+						array(CerberusContexts::CONTEXT_CUSTOM_FIELDSET)
 					),
 			),
 		);
@@ -95,7 +95,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 					DAO_ContextLink::getContextLinkCounts(
 						CerberusContexts::CONTEXT_SERVER,
 						$domain->server_id,
-						array(CerberusContexts::CONTEXT_WORKER, CerberusContexts::CONTEXT_CUSTOM_FIELDSET)
+						array(CerberusContexts::CONTEXT_CUSTOM_FIELDSET)
 					),
 			);
 		}
@@ -129,7 +129,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 
 		$active_worker = CerberusApplication::getActiveWorker();
 		
-		header('Content-Type: application/json; charset=' . LANG_CHARSET_CODE);
+		header('Content-Type: application/json; charset=utf-8');
 		
 		try {
 			if(!empty($id) && !empty($delete)) { // delete
@@ -200,13 +200,6 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 						DAO_Comment::OWNER_CONTEXT_ID => $active_worker->id,
 					);
 					$comment_id = DAO_Comment::create($fields, $also_notify_worker_ids);
-				}
-				
-				// Context Link (if given)
-				@$link_context = DevblocksPlatform::importGPC($_REQUEST['link_context'],'string','');
-				@$link_context_id = DevblocksPlatform::importGPC($_REQUEST['link_context_id'],'integer','');
-				if(!empty($id) && !empty($link_context) && !empty($link_context_id)) {
-					DAO_ContextLink::setLink(CerberusContexts::CONTEXT_DOMAIN, $id, $link_context, $link_context_id);
 				}
 				
 				// Custom field saves
