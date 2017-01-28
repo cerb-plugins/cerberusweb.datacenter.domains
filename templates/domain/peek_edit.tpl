@@ -24,7 +24,7 @@
 			<td width="99%">
 				{$server = $model->getServer()}
 				
-				<button type="button" class="chooser-abstract" data-field-name="server_id" data-context="{CerberusContexts::CONTEXT_SERVER}" data-single="true" data-autocomplete="if-null" data-create="if-null"><span class="glyphicons glyphicons-search"></span></button>
+				<button type="button" class="chooser-abstract" data-field-name="server_id" data-context="{CerberusContexts::CONTEXT_SERVER}" data-single="true" data-autocomplete="" data-autocomplete-if-empty="true" data-create="if-null"><span class="glyphicons glyphicons-search"></span></button>
 				
 				<ul class="bubbles chooser-container">
 					{if $server}
@@ -50,7 +50,7 @@
 					{/if}
 				</ul>
 				
-				<button type="button" class="chooser-abstract" data-field-name="contact_address_id[]" data-context="{CerberusContexts::CONTEXT_ADDRESS}" data-autocomplete="true" data-create="true"><span class="glyphicons glyphicons-search"></span></button>
+				<button type="button" class="chooser-abstract" data-field-name="contact_address_id[]" data-context="{CerberusContexts::CONTEXT_ADDRESS}" data-autocomplete="" data-create="true"><span class="glyphicons glyphicons-search"></span></button>
 			</td>
 		</tr>
 		

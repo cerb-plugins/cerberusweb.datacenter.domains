@@ -23,7 +23,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		return $url;
 	}
 	
-	function autocomplete($term) {
+	function autocomplete($term, $query=null) {
 		$results = DAO_Domain::autocomplete($term);
 		$list = array();
 		
