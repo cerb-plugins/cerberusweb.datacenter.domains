@@ -857,11 +857,11 @@ class DAO_Domain extends Cerb_ORMHelper {
 		
 		switch($as) {
 			case 'ids':
-				return array_keys($results);
+				return $ids;
 				break;
 				
 			default:
-				return DAO_Domain::getIds(array_keys($results));
+				return DAO_Domain::getIds($ids);
 				break;
 		}
 	}
