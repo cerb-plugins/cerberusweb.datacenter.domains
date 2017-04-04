@@ -89,7 +89,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 			),
 		);
 		
-		if(isset($domain->server_id)) {
+		if(!empty($domain->server_id)) {
 			$properties_links[CerberusContexts::CONTEXT_SERVER] = array(
 				$domain->server_id => 
 					DAO_ContextLink::getContextLinkCounts(
@@ -106,14 +106,6 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		
 		$tpl->assign('properties', $properties);
 		
-		// Macros
-		
-		$macros = DAO_TriggerEvent::getReadableByActor(
-			$active_worker,
-			'event.macro.domain'
-		);
-		$tpl->assign('macros', $macros);
-
 		// Tabs
 		$tab_manifests = Extension_ContextProfileTab::getExtensions(false, CerberusContexts::CONTEXT_DOMAIN);
 		$tpl->assign('tab_manifests', $tab_manifests);
@@ -278,7 +270,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		
 		// Macros
 		
-		$macros = DAO_TriggerEvent::getReadableByActor(
+		$macros = DAO_TriggerEvent::getUsableMacrosByWorker(
 			$active_worker,
 			'event.macro.domain'
 		);

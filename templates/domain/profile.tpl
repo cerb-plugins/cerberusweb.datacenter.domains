@@ -1,5 +1,6 @@
 {$page_context = 'cerberusweb.contexts.datacenter.domain'}
 {$page_context_id = $domain->id}
+{$is_writeable = Context_Domain::isWriteableByActor($domain, $active_worker)}
 
 <div style="float:left;">
 	<h1>{$domain->name}</h1>
@@ -20,14 +21,18 @@
 		<span>
 		{$object_watchers = DAO_ContextLink::getContextLinks($page_context, array($page_context_id), CerberusContexts::CONTEXT_WORKER)}
 		{include file="devblocks:cerberusweb.core::internal/watchers/context_follow_button.tpl" context=$page_context context_id=$page_context_id full=true}
-		</span>		
+		</span>
 
 		<!-- Macros -->
+		{if $is_writeable}
 		{devblocks_url assign=return_url full=true}c=profiles&type=domain&id={$domain->name|devblocks_permalink}-{$page_context_id}{/devblocks_url}
-		{include file="devblocks:cerberusweb.core::internal/macros/display/button.tpl" context=$page_context context_id=$page_context_id macros=$macros return_url=$return_url}
+		{include file="devblocks:cerberusweb.core::internal/macros/display/button.tpl" context=$page_context context_id=$page_context_id macro_event="event.macro.domain" return_url=$return_url}
+		{/if}
 	
 		<!-- Edit -->
+		{if $is_writeable}
 		<button type="button" id="btnDatacenterDomainEdit" title="{'common.edit'|devblocks_translate|capitalize}" class="cerb-peek-trigger" data-context="{CerberusContexts::CONTEXT_DOMAIN}" data-context-id="{$page_context_id}" data-edit="true"><span class="glyphicons glyphicons-cogwheel"></span></button>
+		{/if}
 	</form>
 	
 	{if $pref_keyboard_shortcuts}
@@ -110,8 +115,6 @@ $(function() {
 		.on('cerb-peek-closed', function(e) {
 		})
 		;
-	
-	{include file="devblocks:cerberusweb.core::internal/macros/display/menu_script.tpl" selector_button=null selector_menu=null}
 });
 </script>
 
