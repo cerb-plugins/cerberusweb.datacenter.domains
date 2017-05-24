@@ -21,6 +21,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		$request = DevblocksPlatform::getHttpRequest();
 		$translate = DevblocksPlatform::getTranslationService();
 		
+		$context = CerberusContexts::CONTEXT_DOMAIN;
 		$active_worker = CerberusApplication::getActiveWorker();
 		
 		$stack = $request->path;
@@ -28,9 +29,18 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		@array_shift($stack); // domain
 		@$id = intval(array_shift($stack));
 		
-		if(is_numeric($id) && null != ($domain = DAO_Domain::get($id)))
-			$tpl->assign('domain', $domain);
-
+		if(!is_numeric($id) || null == ($domain = DAO_Domain::get($id)))
+			return;
+		
+		$tpl->assign('domain', $domain);
+		
+		// Dictionary
+		$labels = array();
+		$values = array();
+		CerberusContexts::getContext($context, $domain, $labels, $values, '', true, false);
+		$dict = DevblocksDictionaryDelegate::instance($values);
+		$tpl->assign('dict', $dict);
+		
 		// Remember the last tab/URL
 		
 		$point = 'cerberusweb.datacenter.domain.tab';
@@ -109,6 +119,11 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		// Tabs
 		$tab_manifests = Extension_ContextProfileTab::getExtensions(false, CerberusContexts::CONTEXT_DOMAIN);
 		$tpl->assign('tab_manifests', $tab_manifests);
+		
+		// Interactions
+		$interactions = Event_GetInteractionsForWorker::getInteractionsByPointAndWorker('record:' . $context, $dict, $active_worker);
+		$interactions_menu = Event_GetInteractionsForWorker::getInteractionMenu($interactions);
+		$tpl->assign('interactions_menu', $interactions_menu);
 		
 		// Template
 		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/profile.tpl');
@@ -267,14 +282,6 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		
 		$placeholders = Extension_DevblocksContext::getPlaceholderTree($token_labels);
 		$tpl->assign('placeholders', $placeholders);
-		
-		// Macros
-		
-		$macros = DAO_TriggerEvent::getUsableMacrosByWorker(
-			$active_worker,
-			'event.macro.domain'
-		);
-		$tpl->assign('macros', $macros);
 		
 		$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/bulk.tpl');
 	}

@@ -328,6 +328,9 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$id = $context_id; // [TODO] Cleanup
 		
 		$tpl = DevblocksPlatform::getTemplateService();
+		
+		$context = CerberusContexts::CONTEXT_DOMAIN;
+		$active_worker = CerberusApplication::getActiveWorker();
 
 		$tpl->assign('view_id', $view_id);
 
@@ -400,6 +403,14 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, $model, $labels, $values, '', true, false);
 			$dict = DevblocksDictionaryDelegate::instance($values);
 			$tpl->assign('dict', $dict);
+			
+			// Interactions
+			
+			$interactions = Event_GetInteractionsForWorker::getInteractionsByPointAndWorker('record:' . $context, $dict, $active_worker);
+			$interactions_menu = Event_GetInteractionsForWorker::getInteractionMenu($interactions);
+			$tpl->assign('interactions_menu', $interactions_menu);
+
+			// Properties
 			
 			$properties = $context_ext->getCardProperties();
 			$tpl->assign('properties', $properties);
