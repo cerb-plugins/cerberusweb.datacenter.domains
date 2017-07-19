@@ -100,7 +100,7 @@ abstract class AbstractEvent_Domain extends Extension_DevblocksEvent {
 				'context' => CerberusContexts::CONTEXT_BEHAVIOR,
 			),
 			'behavior_bot_id' => array(
-				'label' => 'Behavior',
+				'label' => 'Bot',
 				'context' => CerberusContexts::CONTEXT_BOT,
 			),
 			'domain_id' => array(
