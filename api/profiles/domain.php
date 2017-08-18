@@ -17,7 +17,7 @@
 
 class PageSection_ProfilesDomain extends Extension_PageSection {
 	function render() {
-		$tpl = DevblocksPlatform::getTemplateService();
+		$tpl = DevblocksPlatform::services()->template();
 		$request = DevblocksPlatform::getHttpRequest();
 		$translate = DevblocksPlatform::getTranslationService();
 		
@@ -140,7 +140,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		
 		try {
 			if(!empty($id) && !empty($delete)) { // delete
-				if(!$active_worker->hasPriv('datacenter.domains.actions.delete'))
+				if(!$active_worker->hasPriv('contexts.cerberusweb.contexts.datacenter.domain.delete'))
 					throw new Exception_DevblocksAjaxValidationError("You don't have permission to delete this record.");
 				
 				DAO_Domain::delete($id);
@@ -251,7 +251,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 
 		$active_worker = CerberusApplication::getActiveWorker();
 		
-		$tpl = DevblocksPlatform::getTemplateService();
+		$tpl = DevblocksPlatform::services()->template();
 		$tpl->assign('view_id', $view_id);
 
 		if(!empty($ids)) {
@@ -312,7 +312,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		if(strlen($status) > 0) {
 			switch($status) {
 				case 'deleted':
-					if($active_worker->hasPriv('datacenter.domains.actions.delete')) {
+					if($active_worker->hasPriv('contexts.cerberusweb.contexts.datacenter.domain.delete')) {
 						$do['delete'] = true;
 					}
 					break;

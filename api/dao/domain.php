@@ -18,7 +18,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		if(empty($context_id))
 			return '';
 	
-		$url_writer = DevblocksPlatform::getUrlService();
+		$url_writer = DevblocksPlatform::services()->url();
 		$url = $url_writer->writeNoProxy('c=profiles&type=domain&id='.$context_id, true);
 		return $url;
 	}
@@ -52,7 +52,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 	
 	function getMeta($context_id) {
 		$domain = DAO_Domain::get($context_id);
-		$url_writer = DevblocksPlatform::getUrlService();
+		$url_writer = DevblocksPlatform::services()->url();
 		
 		$url = $this->profileGetUrl($context_id);
 		$friendly = DevblocksPlatform::strToPermalink($domain->name);
@@ -169,7 +169,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			$token_values = $this->_importModelCustomFieldsAsValues($domain, $token_values);
 			
 			// URL
-			$url_writer = DevblocksPlatform::getUrlService();
+			$url_writer = DevblocksPlatform::services()->url();
 			$token_values['record_url'] = $url_writer->writeNoProxy(sprintf("c=profiles&type=domain&id=%s-%d",DevblocksPlatform::strToPermalink($domain->name),$domain->id), true);
 			
 			// Server
@@ -207,6 +207,16 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		);
 		
 		return true;
+	}
+	
+	function getKeyToDaoFieldMap() {
+		return [
+			'created' => DAO_Domain::CREATED,
+			'id' => DAO_Domain::ID,
+			'name' => DAO_Domain::NAME,
+			'server_id' => DAO_Domain::SERVER_ID,
+			'updated' => DAO_Domain::UPDATED,
+		];
 	}
 
 	function lazyLoadContextValues($token, $dictionary) {
@@ -327,7 +337,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 	function renderPeekPopup($context_id=0, $view_id='', $edit=false) {
 		$id = $context_id; // [TODO] Cleanup
 		
-		$tpl = DevblocksPlatform::getTemplateService();
+		$tpl = DevblocksPlatform::services()->template();
 		
 		$context = CerberusContexts::CONTEXT_DOMAIN;
 		$active_worker = CerberusApplication::getActiveWorker();
@@ -494,14 +504,51 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 };
 
 class DAO_Domain extends Cerb_ORMHelper {
+	const CREATED = 'created';
 	const ID = 'id';
 	const NAME = 'name';
 	const SERVER_ID = 'server_id';
-	const CREATED = 'created';
 	const UPDATED = 'updated';
+	
+	private function __construct() {}
+
+	static function getFields() {
+		$validation = DevblocksPlatform::services()->validation();
+		
+		// int(10) unsigned
+		$validation
+			->addField(self::CREATED)
+			->timestamp()
+			;
+		// int(10) unsigned
+		$validation
+			->addField(self::ID)
+			->id()
+			->setEditable(false)
+			;
+		// varchar(255)
+		$validation
+			->addField(self::NAME)
+			->string()
+			->setMaxLength(255)
+			->setRequired(true)
+			;
+		// int(10) unsigned
+		$validation
+			->addField(self::SERVER_ID)
+			->id()
+			;
+		// int(10) unsigned
+		$validation
+			->addField(self::UPDATED)
+			->timestamp()
+			;
+
+		return $validation->getFields();
+	}
 
 	static function create($fields) {
-		$db = DevblocksPlatform::getDatabaseService();
+		$db = DevblocksPlatform::services()->database();
 		
 		if(!isset($fields[DAO_Domain::CREATED]))
 			$fields[DAO_Domain::CREATED] = time();
@@ -541,7 +588,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 			if($check_deltas) {
 				
 				// Trigger an event about the changes
-				$eventMgr = DevblocksPlatform::getEventService();
+				$eventMgr = DevblocksPlatform::services()->event();
 				$eventMgr->trigger(
 					new Model_DevblocksEvent(
 						'dao.domain.update',
@@ -647,7 +694,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	}
 	
 	static function countByServerId($server_id) {
-		$db = DevblocksPlatform::getDatabaseService();
+		$db = DevblocksPlatform::services()->database();
 		
 		$sql = sprintf("SELECT count(id) FROM datacenter_domain WHERE server_id = %d",
 			$server_id
@@ -663,7 +710,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	 * @return Model_Domain[]
 	 */
 	static function getWhere($where=null, $sortBy=null, $sortAsc=true, $limit=null) {
-		$db = DevblocksPlatform::getDatabaseService();
+		$db = DevblocksPlatform::services()->database();
 
 		list($where_sql, $sort_sql, $limit_sql) = self::_getWhereSQL($where, $sortBy, $sortAsc, $limit);
 		
@@ -741,7 +788,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	
 	static function delete($ids) {
 		if(!is_array($ids)) $ids = array($ids);
-		$db = DevblocksPlatform::getDatabaseService();
+		$db = DevblocksPlatform::services()->database();
 		
 		if(empty($ids))
 			return;
@@ -751,7 +798,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 		$db->ExecuteMaster(sprintf("DELETE FROM datacenter_domain WHERE id IN (%s)", $ids_list));
 		
 		// Fire event
-		$eventMgr = DevblocksPlatform::getEventService();
+		$eventMgr = DevblocksPlatform::services()->event();
 		$eventMgr->trigger(
 			new Model_DevblocksEvent(
 				'context.delete',
@@ -767,7 +814,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	
 	public static function maint() {
 		// Fire event
-		$eventMgr = DevblocksPlatform::getEventService();
+		$eventMgr = DevblocksPlatform::services()->event();
 		$eventMgr->trigger(
 			new Model_DevblocksEvent(
 				'context.maint',
@@ -852,7 +899,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	}
 
 	static function autocomplete($term, $as='models') {
-		$db = DevblocksPlatform::getDatabaseService();
+		$db = DevblocksPlatform::services()->database();
 		$ids = array();
 		
 		$results = $db->GetArraySlave(sprintf("SELECT id ".
@@ -890,7 +937,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	 * @return array
 	 */
 	static function search($columns, $params, $limit=10, $page=0, $sortBy=null, $sortAsc=null, $withCounts=true) {
-		$db = DevblocksPlatform::getDatabaseService();
+		$db = DevblocksPlatform::services()->database();
 
 		// Build search queries
 		$query_parts = self::getSearchQueryComponents($columns,$params,$sortBy,$sortAsc);
@@ -1318,7 +1365,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 	function render() {
 		$this->_sanitize();
 		
-		$tpl = DevblocksPlatform::getTemplateService();
+		$tpl = DevblocksPlatform::services()->template();
 		$tpl->assign('id', $this->id);
 		$tpl->assign('view', $this);
 
@@ -1337,7 +1384,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 	}
 
 	function renderCriteria($field) {
-		$tpl = DevblocksPlatform::getTemplateService();
+		$tpl = DevblocksPlatform::services()->template();
 		$tpl->assign('id', $this->id);
 
 		switch($field) {

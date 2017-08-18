@@ -24,11 +24,11 @@
 			<td width="0%" nowrap="nowrap" valign="top" align="right">{'common.status'|devblocks_translate|capitalize}:</td>
 			<td width="100%"><select name="status">
 				<option value=""></option>
-				{if $active_worker->hasPriv('datacenter.domains.actions.delete')}
+				{if $active_worker->hasPriv('contexts.cerberusweb.contexts.datacenter.domain.delete')}
 				<option value="deleted">{'status.deleted'|devblocks_translate|capitalize}</option>
 				{/if}
 			</select>
-			{if $active_worker->hasPriv('datacenter.domains.actions.delete')}
+			{if $active_worker->hasPriv('contexts.cerberusweb.contexts.datacenter.domain.delete')}
 			<button type="button" onclick="this.form.status.selectedIndex = 1;">{'status.deleted'|devblocks_translate|lower}</button>
 			{/if}
 			</td>
