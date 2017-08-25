@@ -531,12 +531,14 @@ class DAO_Domain extends Cerb_ORMHelper {
 			->addField(self::NAME)
 			->string()
 			->setMaxLength(255)
+			->setUnique(get_class())
 			->setRequired(true)
 			;
 		// int(10) unsigned
 		$validation
 			->addField(self::SERVER_ID)
 			->id()
+			->addValidator($validation->validators()->contextId(CerberusContexts::CONTEXT_SERVER, true))
 			;
 		// int(10) unsigned
 		$validation

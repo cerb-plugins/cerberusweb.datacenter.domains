@@ -140,8 +140,8 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		
 		try {
 			if(!empty($id) && !empty($delete)) { // delete
-				if(!$active_worker->hasPriv('contexts.cerberusweb.contexts.datacenter.domain.delete'))
-					throw new Exception_DevblocksAjaxValidationError("You don't have permission to delete this record.");
+				if(!$active_worker->hasPriv(sprintf("contexts.%s.delete", CerberusContexts::CONTEXT_DOMAIN)))
+					throw new Exception_DevblocksAjaxValidationError(DevblocksPlatform::translate('error.core.no_acl.delete'));
 				
 				DAO_Domain::delete($id);
 				
@@ -159,14 +159,6 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 				@$contact_address_ids = DevblocksPlatform::importGPC($_REQUEST['contact_address_id'],'array',array());
 				@$comment = DevblocksPlatform::importGPC($_REQUEST['comment'], 'string', '');
 				
-				// Require fields
-				if(empty($name))
-					throw new Exception_DevblocksAjaxValidationError("A 'Name' is required.", 'name');
-				
-				// Verify the server_id
-				if($server_id && false == ($server = DAO_Server::get($server_id)))
-					throw new Exception_DevblocksAjaxValidationError("The specified 'Server' is invalid.", 'server_id');
-				
 				if(false == (@$created = strtotime($created)))
 					$created = time();
 				
@@ -178,9 +170,11 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 				
 				// Create/Update
 				if(empty($id)) {
-					// Check for dupes
-					if(false != DAO_Domain::getByName($name))
-						throw new Exception_DevblocksAjaxValidationError(sprintf("A domain record already exists with the name '%s'.", $name), 'name');
+					if(!$active_worker->hasPriv(sprintf("contexts.%s.create", CerberusContexts::CONTEXT_DOMAIN)))
+						throw new Exception_DevblocksAjaxValidationError(DevblocksPlatform::translate('error.core.no_acl.create'));
+					
+					if(!DAO_Domain::validate($fields, $error))
+						throw new Exception_DevblocksAjaxValidationError($error);
 					
 					if(false == ($id = DAO_Domain::create($fields)))
 						throw new Exception_DevblocksAjaxValidationError("There was an error creating the record.");
@@ -191,6 +185,12 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 					}
 					
 				} else {
+					if(!$active_worker->hasPriv(sprintf("contexts.%s.update", CerberusContexts::CONTEXT_DOMAIN)))
+						throw new Exception_DevblocksAjaxValidationError(DevblocksPlatform::translate('error.core.no_acl.edit'));
+					
+					if(!DAO_Domain::validate($fields, $error, $id))
+						throw new Exception_DevblocksAjaxValidationError($error);
+					
 					DAO_Domain::update($id, $fields);
 				}
 				

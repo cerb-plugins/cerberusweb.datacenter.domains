@@ -20,19 +20,17 @@
 <fieldset class="peek">
 	<legend>Set Fields</legend>
 	<table cellspacing="0" cellpadding="2" width="100%">
+		{if $active_worker->hasPriv('contexts.cerberusweb.contexts.datacenter.domain.delete')}
 		<tr>
 			<td width="0%" nowrap="nowrap" valign="top" align="right">{'common.status'|devblocks_translate|capitalize}:</td>
 			<td width="100%"><select name="status">
 				<option value=""></option>
-				{if $active_worker->hasPriv('contexts.cerberusweb.contexts.datacenter.domain.delete')}
 				<option value="deleted">{'status.deleted'|devblocks_translate|capitalize}</option>
-				{/if}
 			</select>
-			{if $active_worker->hasPriv('contexts.cerberusweb.contexts.datacenter.domain.delete')}
 			<button type="button" onclick="this.form.status.selectedIndex = 1;">{'status.deleted'|devblocks_translate|lower}</button>
-			{/if}
 			</td>
 		</tr>
+		{/if}
 		
 		{if is_array($servers) && !empty($servers)}
 		<tr>
@@ -61,7 +59,9 @@
 
 {include file="devblocks:cerberusweb.core::internal/macros/behavior/bulk.tpl" macros=$macros}
 
+{if $active_worker->hasPriv("contexts.{$peek_context}.broadcast")}
 {include file="devblocks:cerberusweb.core::internal/views/bulk_broadcast.tpl" context=CerberusContexts::CONTEXT_DOMAIN}
+{/if}
 
 <button type="button" class="submit"><span class="glyphicons glyphicons-circle-ok" style="color:rgb(0,180,0);"></span> {'common.save_changes'|devblocks_translate|capitalize}</button>
 </form>
