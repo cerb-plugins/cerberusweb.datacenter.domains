@@ -1,5 +1,5 @@
 <?php
-class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextProfile, IDevblocksContextPeek, IDevblocksContextImport, IDevblocksContextAutocomplete {
+class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextProfile, IDevblocksContextPeek, IDevblocksContextImport, IDevblocksContextBroadcast, IDevblocksContextAutocomplete {
 	static function isReadableByActor($models, $actor) {
 		// Everyone can view
 		return CerberusContexts::allowEverything($models);
@@ -177,24 +177,9 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			$token_values['server_id'] = $server_id;
 		}
 
-		// Addy
-		$address_id = (is_array($id_map) && isset($id_map['address_id'])) ? $id_map['address_id'] : null;
-		$merge_token_labels = array();
-		$merge_token_values = array();
-		CerberusContexts::getContext(CerberusContexts::CONTEXT_ADDRESS, $address_id, $merge_token_labels, $merge_token_values, null, true);
-
-		CerberusContexts::merge(
-			'contact_',
-			$prefix.'Contact:',
-			$merge_token_labels,
-			$merge_token_values,
-			$token_labels,
-			$token_values
-		);
-		
 		// Server
-		$merge_token_labels = array();
-		$merge_token_values = array();
+		$merge_token_labels = [];
+		$merge_token_values = [];
 		CerberusContexts::getContext(CerberusContexts::CONTEXT_SERVER, null, $merge_token_labels, $merge_token_values, null, true);
 
 		CerberusContexts::merge(
@@ -238,7 +223,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$context_id = $dictionary['id'];
 		
 		@$is_loaded = $dictionary['_loaded'];
-		$values = array();
+		$values = [];
 		
 		if(!$is_loaded) {
 			CerberusContexts::getContext($context, $context_id, $labels, $values, null, true, true);
@@ -246,7 +231,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		
 		switch($token) {
 			case 'contacts':
-				$contacts = array();
+				$contacts = [];
 				$address_links = DAO_ContextLink::getContextLinks($context, $context_id, CerberusContexts::CONTEXT_ADDRESS);
 
 				if(!is_array($address_links))
@@ -257,8 +242,8 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 				
 				if(is_array($address_links))
 				foreach($address_links as $address_link) { /* @var $address_link Model_ContextLink */
-					$token_labels = array();
-					$token_values = array();
+					$token_labels = [];
+					$token_values = [];
 					CerberusContexts::getContext($address_link->context, $address_link->context_id, $token_labels, $token_values, null, true);
 					
 					if(!empty($token_values))
@@ -437,7 +422,22 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			
 			$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek.tpl');
 		}
-		
+	}
+	
+	function broadcastRecipientFieldsGet() {
+		$results = $this->_broadcastRecipientFieldsGet(CerberusContexts::CONTEXT_DOMAIN, 'Domain');
+		asort($results);
+		return $results;
+	}
+	
+	function broadcastPlaceholdersGet() {
+		$token_values = $this->_broadcastPlaceholdersGet(CerberusContexts::CONTEXT_DOMAIN);
+		return $token_values;
+	}
+	
+	function broadcastRecipientFieldsToEmails(array $fields, DevblocksDictionaryDelegate $dict) {
+		$emails = $this->_broadcastRecipientFieldsToEmails($fields, $dict);
+		return $emails;
 	}
 	
 	function importGetKeys() {
@@ -461,11 +461,6 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 				'type' => Model_CustomField::TYPE_DATE,
 				'param' => SearchFields_Domain::UPDATED,
 			),
-// 			'primary_email_id' => array(
-// 				'label' => 'Email',
-// 				'type' => 'ctx_' . CerberusContexts::CONTEXT_ADDRESS,
-// 				'param' => SearchFields_CrmOpportunity::PRIMARY_EMAIL_ID,
-// 			),
 		);
 	
 		$fields = SearchFields_Domain::getFields();
@@ -693,26 +688,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 			
 			// Broadcast
 			if(isset($do['broadcast']))
-				C4_AbstractView::_doBulkBroadcast(CerberusContexts::CONTEXT_DOMAIN, $do['broadcast'], $ids, 'contacts_list', array(
-					'callback_recipient_expand' => function(array $to, DevblocksDictionaryDelegate $dict) {
-						if(false == ($model = CerberusApplication::hashLookupAddress($to['email'], true)))
-							return false;
-						
-						// Remove an existing contact
-						$dict->scrubKeys('contact_');
-						
-						// Prime the new contact
-						$dict->contact__context = CerberusContexts::CONTEXT_ADDRESS;
-						$dict->contact_id = $model->id;
-					},
-					'callback_recipient_reject' => function(DevblocksDictionaryDelegate $dict) {
-						if($dict->contact_is_defunct || $dict->contact_is_banned) {
-							return true;
-						}
-						
-						return false;
-					}
-				));
+				C4_AbstractView::_doBulkBroadcast(CerberusContexts::CONTEXT_DOMAIN, $do['broadcast'], $ids);
 			
 		} else {
 			DAO_Domain::delete($ids);

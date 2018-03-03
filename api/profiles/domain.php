@@ -2,7 +2,7 @@
 /***********************************************************************
 | Cerb(tm) developed by Webgroup Media, LLC.
 |-----------------------------------------------------------------------
-| All source code & content (c) Copyright 2002-2017, Webgroup Media LLC
+| All source code & content (c) Copyright 2002-2018, Webgroup Media LLC
 |   unless specifically noted otherwise.
 |
 | This source code is released under the Devblocks Public License.
@@ -156,7 +156,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 				@$name = DevblocksPlatform::importGPC($_REQUEST['name'],'string','');
 				@$server_id = DevblocksPlatform::importGPC($_REQUEST['server_id'],'integer',0);
 				@$created = DevblocksPlatform::importGPC($_REQUEST['created'],'string','');
-				@$contact_address_ids = DevblocksPlatform::importGPC($_REQUEST['contact_address_id'],'array',array());
+				@$contact_address_ids = DevblocksPlatform::importGPC($_REQUEST['contact_address_id'],'array',[]);
 				@$comment = DevblocksPlatform::importGPC($_REQUEST['comment'], 'string', '');
 				
 				if(false == (@$created = strtotime($created)))
@@ -281,8 +281,18 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		$html_templates = DAO_MailHtmlTemplate::getAll();
 		$tpl->assign('html_templates', $html_templates);
 		
-		// Broadcast
-		CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, null, $token_labels, $token_values);
+		if(false == ($context_ext = Extension_DevblocksContext::get(CerberusContexts::CONTEXT_DOMAIN)))
+			return [];
+		
+		/* @var $context_ext IDevblocksContextBroadcast */
+		
+		// Recipient fields
+		$recipient_fields = $context_ext->broadcastRecipientFieldsGet();
+		$tpl->assign('broadcast_recipient_fields', $recipient_fields);
+		
+		// Placeholders
+		$token_values = $context_ext->broadcastPlaceholdersGet();
+		$token_labels = $token_values['_labels'];
 		
 		$placeholders = Extension_DevblocksContext::getPlaceholderTree($token_labels);
 		$tpl->assign('placeholders', $placeholders);
@@ -328,9 +338,10 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 		}
 		
 		// Broadcast: Mass Reply
-		if(1 || $active_worker->hasPriv('fill.in.the.acl.string')) {
+		if($active_worker->hasPriv('contexts.cerberusweb.contexts.datacenter.domain.broadcast')) {
 			@$do_broadcast = DevblocksPlatform::importGPC($_REQUEST['do_broadcast'],'string',null);
 			@$broadcast_group_id = DevblocksPlatform::importGPC($_REQUEST['broadcast_group_id'],'integer',0);
+			@$broadcast_to = DevblocksPlatform::importGPC($_REQUEST['broadcast_to'],'array',[]);
 			@$broadcast_subject = DevblocksPlatform::importGPC($_REQUEST['broadcast_subject'],'string',null);
 			@$broadcast_message = DevblocksPlatform::importGPC($_REQUEST['broadcast_message'],'string',null);
 			@$broadcast_format = DevblocksPlatform::importGPC($_REQUEST['broadcast_format'],'string',null);
@@ -339,7 +350,8 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 			@$broadcast_status_id = DevblocksPlatform::importGPC($_REQUEST['broadcast_status_id'],'integer',0);
 			
 			if(0 != strlen($do_broadcast) && !empty($broadcast_subject) && !empty($broadcast_message)) {
-				$do['broadcast'] = array(
+				$do['broadcast'] = [
+					'to' => $broadcast_to,
 					'subject' => $broadcast_subject,
 					'message' => $broadcast_message,
 					'format' => $broadcast_format,
@@ -348,7 +360,7 @@ class PageSection_ProfilesDomain extends Extension_PageSection {
 					'status_id' => $broadcast_status_id,
 					'group_id' => $broadcast_group_id,
 					'worker_id' => $active_worker->id,
-				);
+				];
 			}
 		}
 		
