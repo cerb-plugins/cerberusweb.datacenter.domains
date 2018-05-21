@@ -23,6 +23,45 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		return $url;
 	}
 	
+	function profileGetFields($model=null) {
+		$translate = DevblocksPlatform::getTranslationService();
+
+		$properties = [];
+		
+		if(is_null($model))
+			$model = new Model_Domain();
+		
+		$properties['name'] = array(
+			'label' => mb_ucfirst($translate->_('common.name')),
+			'type' => Model_CustomField::TYPE_LINK,
+			'value' => $model->id,
+			'params' => [
+				'context' => CerberusContexts::CONTEXT_DOMAIN,
+			],
+		);
+		
+		$properties['server'] = array(
+			'label' => mb_ucfirst($translate->_('cerberusweb.datacenter.common.server')),
+			'type' => Model_CustomField::TYPE_LINK,
+			'params' => array('context' => CerberusContexts::CONTEXT_SERVER),
+			'value' => $model->server_id,
+		);
+		
+		$properties['created'] = array(
+			'label' => mb_ucfirst($translate->_('common.created')),
+			'type' => Model_CustomField::TYPE_DATE,
+			'value' => $model->created,
+		);
+		
+		$properties['updated'] = array(
+			'label' => DevblocksPlatform::translateCapitalized('common.updated'),
+			'type' => Model_CustomField::TYPE_DATE,
+			'value' => $model->updated,
+		);
+		
+		return $properties;
+	}
+	
 	function autocomplete($term, $query=null) {
 		$results = DAO_Domain::autocomplete($term);
 		$list = array();
@@ -373,12 +412,6 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek_edit.tpl');
 			
 		} else {
-			// Counts
-			$activity_counts = array(
-				'comments' => DAO_Comment::count(CerberusContexts::CONTEXT_DOMAIN, $context_id),
-			);
-			$tpl->assign('activity_counts', $activity_counts);
-			
 			// Links
 			$links = array(
 				CerberusContexts::CONTEXT_DOMAIN => array(
@@ -386,7 +419,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 						DAO_ContextLink::getContextLinkCounts(
 							CerberusContexts::CONTEXT_DOMAIN,
 							$context_id,
-							array(CerberusContexts::CONTEXT_CUSTOM_FIELDSET)
+							[]
 						),
 				),
 			);
@@ -416,9 +449,12 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			$tpl->assign('interactions_menu', $interactions_menu);
 
 			// Properties
-			
 			$properties = $context_ext->getCardProperties();
 			$tpl->assign('properties', $properties);
+			
+			// Card search buttons
+			$search_buttons = $context_ext->getCardSearchButtons($dict, []);
+			$tpl->assign('search_buttons', $search_buttons);
 			
 			$tpl->display('devblocks:cerberusweb.datacenter.domains::domain/peek.tpl');
 		}
@@ -869,12 +905,6 @@ class DAO_Domain extends Cerb_ORMHelper {
 			'tables' => &$tables,
 		);
 		
-		array_walk_recursive(
-			$params,
-			array('DAO_Domain', '_translateVirtualParameters'),
-			$args
-		);
-		
 		$result = array(
 			'primary_table' => 'datacenter_domain',
 			'select' => $select_sql,
@@ -886,23 +916,6 @@ class DAO_Domain extends Cerb_ORMHelper {
 		return $result;
 	}
 	
-	private static function _translateVirtualParameters($param, $key, &$args) {
-		if(!is_a($param, 'DevblocksSearchCriteria'))
-			return;
-	
-		$from_context = CerberusContexts::CONTEXT_DOMAIN;
-		$from_index = 'datacenter_domain.id';
-		
-		$param_key = $param->field;
-		settype($param_key, 'string');
-		
-		switch($param_key) {
-			case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
-				self::_searchComponentsVirtualHasFieldset($param, $from_context, $from_index, $args['join_sql'], $args['where_sql']);
-				break;
-		}
-	}
-
 	static function autocomplete($term, $as='models') {
 		$db = DevblocksPlatform::services()->database();
 		$ids = array();
@@ -1036,6 +1049,10 @@ class SearchFields_Domain extends DevblocksSearchFields {
 				return self::_getWhereSQLFromContextLinksField($param, CerberusContexts::CONTEXT_DOMAIN, self::getPrimaryKey());
 				break;
 				
+			case self::VIRTUAL_HAS_FIELDSET:
+				return self::_getWhereSQLFromVirtualSearchSqlField($param, CerberusContexts::CONTEXT_CUSTOM_FIELDSET, sprintf('SELECT context_id FROM context_to_custom_fieldset WHERE context = %s AND custom_fieldset_id IN (%%s)', Cerb_ORMHelper::qstr(CerberusContexts::CONTEXT_DOMAIN)), self::getPrimaryKey());
+				break;
+				
 			case self::VIRTUAL_SERVER_SEARCH:
 				return self::_getWhereSQLFromVirtualSearchField($param, CerberusContexts::CONTEXT_SERVER, 'datacenter_domain.server_id');
 				break;
@@ -1147,10 +1164,6 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 			SearchFields_Domain::VIRTUAL_HAS_FIELDSET,
 			SearchFields_Domain::VIRTUAL_SERVER_SEARCH,
 			SearchFields_Domain::VIRTUAL_WATCHERS,
-		));
-		
-		$this->addParamsHidden(array(
-			SearchFields_Domain::VIRTUAL_SERVER_SEARCH,
 		));
 		
 		$this->doResetCriteria();
@@ -1278,6 +1291,14 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 					'type' => DevblocksSearchCriteria::TYPE_DATE,
 					'options' => array('param_key' => SearchFields_Domain::CREATED),
 				),
+			'fieldset' =>
+				array(
+					'type' => DevblocksSearchCriteria::TYPE_VIRTUAL,
+					'options' => array('param_key' => SearchFields_Domain::VIRTUAL_HAS_FIELDSET),
+					'examples' => [
+						['type' => 'search', 'context' => CerberusContexts::CONTEXT_CUSTOM_FIELDSET, 'qr' => 'context:' . CerberusContexts::CONTEXT_DOMAIN],
+					]
+				),
 			'id' => 
 				array(
 					'type' => DevblocksSearchCriteria::TYPE_NUMBER,
@@ -1313,7 +1334,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 		
 		// Add quick search links
 		
-		$fields = self::_appendVirtualFiltersFromQuickSearchContexts('links', $fields, 'links');
+		$fields = self::_appendVirtualFiltersFromQuickSearchContexts('links', $fields, 'links', SearchFields_Domain::VIRTUAL_CONTEXT_LINK);
 		
 		// Add searchable custom fields
 		
@@ -1346,6 +1367,10 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 	
 	function getParamFromQuickSearchFieldTokens($field, $tokens) {
 		switch($field) {
+			case 'fieldset':
+				return DevblocksSearchCriteria::getVirtualQuickSearchParamFromTokens($field, $tokens, '*_has_fieldset');
+				break;
+			
 			case 'server':
 				return DevblocksSearchCriteria::getVirtualQuickSearchParamFromTokens($field, $tokens, SearchFields_Domain::VIRTUAL_SERVER_SEARCH);
 				break;
@@ -1385,70 +1410,6 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 				break;
 		}
 		
-	}
-
-	function renderCriteria($field) {
-		$tpl = DevblocksPlatform::services()->template();
-		$tpl->assign('id', $this->id);
-
-		switch($field) {
-			case SearchFields_Domain::NAME:
-				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__string.tpl');
-				break;
-				
-			case SearchFields_Domain::ID:
-				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__number.tpl');
-				break;
-				
-			case 'placeholder_bool':
-				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__bool.tpl');
-				break;
-				
-			case SearchFields_Domain::CREATED:
-			case SearchFields_Domain::UPDATED:
-				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__date.tpl');
-				break;
-				
-			case SearchFields_Domain::SERVER_ID:
-				$options = array();
-				$servers = DAO_Server::getAll();
-				
-				if(is_array($servers))
-				foreach($servers as $server_id => $server) { /* @var $server Model_Server */
-					$options[$server_id] = $server->name;
-				}
-				
-				$tpl->assign('options', $options);
-				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__list.tpl');
-				break;
-				
-			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
-				$contexts = Extension_DevblocksContext::getAll(false);
-				$tpl->assign('contexts', $contexts);
-				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__context_link.tpl');
-				break;
-				
-			case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
-				$this->_renderCriteriaHasFieldset($tpl, CerberusContexts::CONTEXT_DOMAIN);
-				break;
-				
-			case SearchFields_Domain::VIRTUAL_WATCHERS:
-				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__context_worker.tpl');
-				break;
-				
-			case SearchFields_Domain::FULLTEXT_COMMENT_CONTENT:
-				$tpl->display('devblocks:cerberusweb.core::internal/views/criteria/__fulltext.tpl');
-				break;
-				
-			default:
-				// Custom Fields
-				if('cf_' == substr($field,0,3)) {
-					$this->_renderCriteriaCustomField($tpl, substr($field,3));
-				} else {
-					echo ' ';
-				}
-				break;
-		}
 	}
 
 	function renderVirtualCriteria($param) {

@@ -1,36 +1,4 @@
 <?php
-if(class_exists('Extension_ContextProfileTab', true)):
-class ChDomainsServerTab extends Extension_ContextProfileTab {
-	function showTab($context, $context_id) {
-		if(0 != strcasecmp($context, CerberusContexts::CONTEXT_SERVER))
-			return;
-		
-		$tpl = DevblocksPlatform::services()->template();
-
-		// View
-		$view_id = 'server_domains';
-		
-		$defaults = C4_AbstractViewModel::loadFromClass('View_Domain');
-		$defaults->id = $view_id;
-		
-		$view = C4_AbstractViewLoader::getView($view_id, $defaults);
-		$view->id = $view_id;
-		$view->name = 'Domains';
-		$tpl->assign('view', $view);
-		
-		$view->addParamsHidden(array(
-			SearchFields_Domain::SERVER_ID,
-		), true);
-		$view->addParamsRequired(array(
-			SearchFields_Domain::SERVER_ID => new DevblocksSearchCriteria(SearchFields_Domain::SERVER_ID, '=', $context_id),
-		), true);
-		
-		// Template
-		$tpl->display('devblocks:cerberusweb.datacenter.domains::server_tab/index.tpl');
-	}
-};
-endif;
-
 // Controller
 // [TODO] Move this to profiles
 class Page_Domains extends CerberusPageExtension {
