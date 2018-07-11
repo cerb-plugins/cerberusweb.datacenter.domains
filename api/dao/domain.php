@@ -1073,6 +1073,38 @@ class SearchFields_Domain extends DevblocksSearchFields {
 		return false;
 	}
 	
+	static function getFieldForSubtotalKey($key, array $query_fields, array $search_fields, $primary_key) {
+		switch($key) {
+			case 'server':
+				$key = 'server.id';
+				break;
+		}
+		
+		return parent::getFieldForSubtotalKey($key, $query_fields, $search_fields, $primary_key);
+	}
+	
+	static function getLabelsForKeyValues($key, $values) {
+		switch($key) {
+			case SearchFields_Domain::ID:
+				$models = DAO_Domain::getIds($values);
+				$label_map = array_column(DevblocksPlatform::objectsToArrays($models), 'name', 'id');
+				if(in_array(0,$values))
+					$label_map[0] = DevblocksPlatform::translate('common.none');
+				return $label_map;
+				break;
+				
+			case SearchFields_Domain::SERVER_ID:
+				$models = DAO_Server::getIds($values);
+				$label_map = array_column(DevblocksPlatform::objectsToArrays($models), 'name', 'id');
+				if(in_array(0,$values))
+					$label_map[0] = DevblocksPlatform::translate('common.none');
+				return $label_map;
+				break;
+		}
+		
+		return parent::getLabelsForKeyValues($key, $values);
+	}
+	
 	/**
 	 * @return DevblocksSearchField[]
 	 */
@@ -1239,12 +1271,9 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 		
 		switch($column) {
 			case SearchFields_Domain::SERVER_ID:
-				$servers = DAO_Server::getAll();
-				$label_map = array(
-					'0' => '(none)',
-				);
-				foreach($servers as $server_id => $server)
-					$label_map[$server_id] = $server->name;
+				$label_map = function(array $values) use ($column) {
+					return SearchFields_Domain::getLabelsForKeyValues($column, $values);
+				};
 				$counts = $this->_getSubtotalCountForStringColumn($context, $column, $label_map, 'in', 'options[]');
 				break;
 
@@ -1318,6 +1347,14 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 					'options' => array('param_key' => SearchFields_Domain::VIRTUAL_SERVER_SEARCH),
 					'examples' => [
 						['type' => 'search', 'context' => CerberusContexts::CONTEXT_SERVER, 'q' => ''],
+					]
+				),
+			'server.id' => 
+				array(
+					'type' => DevblocksSearchCriteria::TYPE_NUMBER,
+					'options' => array('param_key' => SearchFields_Domain::SERVER_ID),
+					'examples' => [
+						['type' => 'chooser', 'context' => CerberusContexts::CONTEXT_SERVER, 'q' => ''],
 					]
 				),
 			'updated' => 
@@ -1440,23 +1477,8 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 
 		switch($field) {
 			case SearchFields_Domain::SERVER_ID:
-				$servers = DAO_Server::getAll();
-				$strings = array();
-
-				if(empty($values)) {
-					echo DevblocksPlatform::strEscapeHtml("(blank)");
-					break;
-				}
-				
-				foreach($values as $val) {
-					if(empty($val))
-						$strings[] = DevblocksPlatform::strEscapeHtml("(none)");
-					elseif(!isset($servers[$val]))
-						continue;
-					else
-						$strings[] = DevblocksPlatform::strEscapeHtml($servers[$val]->name);
-				}
-				echo implode(" or ", $strings);
+				$label_map = SearchFields_Domain::getLabelsForKeyValues($field, $values);
+				parent::_renderCriteriaParamString($param, $label_map);
 				break;
 				
 			default:
