@@ -922,7 +922,8 @@ class DAO_Domain extends Cerb_ORMHelper {
 		
 		$results = $db->GetArraySlave(sprintf("SELECT id ".
 			"FROM datacenter_domain ".
-			"WHERE name LIKE %s ",
+			"WHERE name LIKE %s ".
+			"LIMIT 25",
 			$db->qstr($term.'%')
 		));
 		
@@ -1073,14 +1074,14 @@ class SearchFields_Domain extends DevblocksSearchFields {
 		return false;
 	}
 	
-	static function getFieldForSubtotalKey($key, array $query_fields, array $search_fields, $primary_key) {
+	static function getFieldForSubtotalKey($key, $context, array $query_fields, array $search_fields, $primary_key) {
 		switch($key) {
 			case 'server':
 				$key = 'server.id';
 				break;
 		}
 		
-		return parent::getFieldForSubtotalKey($key, $query_fields, $search_fields, $primary_key);
+		return parent::getFieldForSubtotalKey($key, $context, $query_fields, $search_fields, $primary_key);
 	}
 	
 	static function getLabelsForKeyValues($key, $values) {
