@@ -1,5 +1,7 @@
 <?php
 class Context_Domain extends Extension_DevblocksContext implements IDevblocksContextProfile, IDevblocksContextPeek, IDevblocksContextImport, IDevblocksContextBroadcast, IDevblocksContextAutocomplete {
+	const ID = CerberusContexts::CONTEXT_DOMAIN;
+	
 	static function isReadableByActor($models, $actor) {
 		// Everyone can view
 		return CerberusContexts::allowEverything($models);
@@ -659,7 +661,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 		parent::_updateWhere('datacenter_domain', $fields, $where);
 	}
 	
-	static public function onBeforeUpdateByActor($actor, $fields, $id=null, &$error=null) {
+	static public function onBeforeUpdateByActor($actor, &$fields, $id=null, &$error=null) {
 		$context = CerberusContexts::CONTEXT_DOMAIN;
 		
 		if(!self::_onBeforeUpdateByActorCheckContextPrivs($actor, $context, $id, $error))
