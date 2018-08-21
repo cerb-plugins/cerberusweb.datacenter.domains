@@ -19,4 +19,10 @@ if(!$result) {
 	$db->ExecuteMaster("INSERT IGNORE INTO devblocks_setting (plugin_id, setting, value) VALUES ('cerberusweb.core','profile:tabs:cerberusweb.contexts.datacenter.domain',CONCAT('[',@last_tab_id,']'))");
 }
 
+// ===========================================================================
+// Fix 'Server' widgets on domain profiles
+
+$sql = "UPDATE profile_widget SET extension_params_json = REPLACE(extension_params_json,'{{record_id}}','{{record_server_id}}') WHERE name = 'Server' AND profile_tab_id IN (SELECT id FROM profile_tab WHERE context = 'cerberusweb.contexts.datacenter.domain' AND name = 'Overview')";
+$db->ExecuteMaster($sql);
+
 return TRUE;
