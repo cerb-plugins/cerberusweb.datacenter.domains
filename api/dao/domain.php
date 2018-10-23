@@ -66,7 +66,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 	
 	function autocomplete($term, $query=null) {
 		$results = DAO_Domain::autocomplete($term);
-		$list = array();
+		$list = [];
 		
 		if(stristr('none', $term) || stristr('empty', $term) || stristr('null', $term)) {
 			$empty = new stdClass();
@@ -82,7 +82,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			$entry->label = $domain->name;
 			$entry->value = sprintf("%d", $domain_id);
 			
-			$meta = array();
+			$meta = [];
 
 			$entry->meta = $meta;
 			$list[] = $entry;
@@ -93,7 +93,6 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 	
 	function getMeta($context_id) {
 		$domain = DAO_Domain::get($context_id);
-		$url_writer = DevblocksPlatform::services()->url();
 		
 		$url = $this->profileGetUrl($context_id);
 		$friendly = DevblocksPlatform::strToPermalink($domain->name);
@@ -192,7 +191,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 			$token_types = array_merge($token_types, $custom_field_types);
 		
 		// Token values
-		$token_values = array();
+		$token_values = [];
 		
 		$token_values['_context'] = CerberusContexts::CONTEXT_DOMAIN;
 		$token_values['_types'] = $token_types;
@@ -246,6 +245,14 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		];
 	}
 	
+	function getKeyMeta() {
+		$keys = parent::getKeyMeta();
+		
+		$keys['server_id']['notes'] = "The ID of the [server](/docs/records/types/server/) linked to this domain";
+		
+		return $keys;
+	}
+	
 	function getDaoFieldsFromKeyAndValue($key, $value, &$out_fields, &$error) {
 		switch(DevblocksPlatform::strLower($key)) {
 			case 'links':
@@ -254,6 +261,22 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		}
 		
 		return true;
+	}
+	
+	function lazyLoadGetKeys() {
+		$lazy_keys = parent::lazyLoadGetKeys();
+		
+		$lazy_keys['contacts'] = [
+			'label' => 'Contacts',
+			'type' => 'Records',
+		];
+		
+		$lazy_keys['contacts_list'] = [
+			'label' => 'Contacts List',
+			'type' => 'Text',
+		];
+		
+		return $lazy_keys;
 	}
 
 	function lazyLoadContextValues($token, $dictionary) {
@@ -267,6 +290,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		$values = [];
 		
 		if(!$is_loaded) {
+			$labels = [];
 			CerberusContexts::getContext($context, $context_id, $labels, $values, null, true, true);
 		}
 		
@@ -296,7 +320,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 				
 			case 'contacts_list':
 				$result = $this->lazyLoadContextValues('contacts', $dictionary);
-				$contacts = array();
+				$contacts = [];
 				
 				if(isset($result['contacts']))
 				foreach($result['contacts'] as $contact) {
@@ -348,7 +372,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		return $view;
 	}
 	
-	function getView($context=null, $context_id=null, $options=array(), $view_id=null) {
+	function getView($context=null, $context_id=null, $options=[], $view_id=null) {
 		$view_id = str_replace('.','_', $this->id);
 		
 		$defaults = C4_AbstractViewModel::loadFromClass($this->getViewClass());
@@ -356,7 +380,7 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 
 		$view = C4_AbstractViewLoader::getView($view_id, $defaults);
 		
-		$params_req = array();
+		$params_req = [];
 		
 		if(!empty($context) && !empty($context_id)) {
 			$params_req = array(
@@ -438,8 +462,8 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 				return;
 			
 			// Dictionary
-			$labels = array();
-			$values = array();
+			$labels = [];
+			$values = [];
 			CerberusContexts::getContext(CerberusContexts::CONTEXT_DOMAIN, $model, $labels, $values, '', true, false);
 			$dict = DevblocksDictionaryDelegate::instance($values);
 			$tpl->assign('dict', $dict);
@@ -809,7 +833,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	 * @return Model_Domain[]
 	 */
 	static private function _getObjectsFromResult($rs) {
-		$objects = array();
+		$objects = [];
 		
 		if(!($rs instanceof mysqli_result))
 			return false;
@@ -877,7 +901,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	public static function getSearchQueryComponents($columns, $params, $sortBy=null, $sortAsc=null) {
 		$fields = SearchFields_Domain::getFields();
 		
-		list($tables, $wheres) = parent::_parseSearchParams($params, $columns, 'SearchFields_Domain', $sortBy);
+		list(, $wheres) = parent::_parseSearchParams($params, $columns, 'SearchFields_Domain', $sortBy);
 		
 		$select_sql = sprintf("SELECT ".
 			"datacenter_domain.id as %s, ".
@@ -899,14 +923,6 @@ class DAO_Domain extends Cerb_ORMHelper {
 			
 		$sort_sql = self::_buildSortClause($sortBy, $sortAsc, $fields, $select_sql, 'SearchFields_Domain');
 
-		// Translate virtual fields
-		
-		$args = array(
-			'join_sql' => &$join_sql,
-			'where_sql' => &$where_sql,
-			'tables' => &$tables,
-		);
-		
 		$result = array(
 			'primary_table' => 'datacenter_domain',
 			'select' => $select_sql,
@@ -920,7 +936,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 	
 	static function autocomplete($term, $as='models') {
 		$db = DevblocksPlatform::services()->database();
-		$ids = array();
+		$ids = [];
 		
 		$results = $db->GetArraySlave(sprintf("SELECT id ".
 			"FROM datacenter_domain ".
@@ -986,7 +1002,7 @@ class DAO_Domain extends Cerb_ORMHelper {
 		if(!($rs instanceof mysqli_result))
 			return false;
 		
-		$results = array();
+		$results = [];
 		
 		while($row = mysqli_fetch_assoc($rs)) {
 			$object_id = intval($row[SearchFields_Domain::ID]);
@@ -1231,7 +1247,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 	function getSubtotalFields() {
 		$all_fields = $this->getParamsAvailable(true);
 		
-		$fields = array();
+		$fields = [];
 
 		if(is_array($all_fields))
 		foreach($all_fields as $field_key => $field_model) {
@@ -1265,12 +1281,12 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 	}
 	
 	function getSubtotalCounts($column) {
-		$counts = array();
+		$counts = [];
 		$fields = $this->getFields();
 		$context = CerberusContexts::CONTEXT_DOMAIN;
 
 		if(!isset($fields[$column]))
-			return array();
+			return [];
 		
 		switch($column) {
 			case SearchFields_Domain::SERVER_ID:
@@ -1383,7 +1399,7 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 		
 		// Engine/schema examples: Comments
 		
-		$ft_examples = array();
+		$ft_examples = [];
 		
 		if(false != ($schema = Extension_DevblocksSearchSchema::get(Search_CommentContent::ID))) {
 			if(false != ($engine = $schema->getEngine())) {
@@ -1516,22 +1532,22 @@ class View_Domain extends C4_AbstractView implements IAbstractView_Subtotals, IA
 				break;
 				
 			case SearchFields_Domain::SERVER_ID:
-				@$options = DevblocksPlatform::importGPC($_REQUEST['options'],'array',array());
+				@$options = DevblocksPlatform::importGPC($_REQUEST['options'],'array',[]);
 				$criteria = new DevblocksSearchCriteria($field,$oper,$options);
 				break;
 				
 			case SearchFields_Domain::VIRTUAL_CONTEXT_LINK:
-				@$context_links = DevblocksPlatform::importGPC($_REQUEST['context_link'],'array',array());
+				@$context_links = DevblocksPlatform::importGPC($_REQUEST['context_link'],'array',[]);
 				$criteria = new DevblocksSearchCriteria($field,DevblocksSearchCriteria::OPER_IN,$context_links);
 				break;
 				
 			case SearchFields_Domain::VIRTUAL_HAS_FIELDSET:
-				@$options = DevblocksPlatform::importGPC($_REQUEST['options'],'array',array());
+				@$options = DevblocksPlatform::importGPC($_REQUEST['options'],'array',[]);
 				$criteria = new DevblocksSearchCriteria($field,DevblocksSearchCriteria::OPER_IN,$options);
 				break;
 				
 			case SearchFields_Domain::VIRTUAL_WATCHERS:
-				@$worker_ids = DevblocksPlatform::importGPC($_REQUEST['worker_id'],'array',array());
+				@$worker_ids = DevblocksPlatform::importGPC($_REQUEST['worker_id'],'array',[]);
 				$criteria = new DevblocksSearchCriteria($field,$oper,$worker_ids);
 				break;
 				
