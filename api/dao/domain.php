@@ -138,6 +138,13 @@ class Context_Domain extends Extension_DevblocksContext implements IDevblocksCon
 		);
 	}
 	
+	function getContextIdFromAlias($alias) {
+		if(false != ($domain = DAO_Domain::getByName($alias)))
+			return $domain->id;
+		
+		return null;
+	}
+	
 	function getContext($id_map, &$token_labels, &$token_values, $prefix=null) {
 		$domain = null;
 

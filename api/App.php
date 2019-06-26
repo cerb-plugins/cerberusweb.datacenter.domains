@@ -4,7 +4,7 @@
 class Page_Domains extends CerberusPageExtension {
 	function isVisible() {
 		// The current session must be a logged-in worker to use this page.
-		if(null == ($worker = CerberusApplication::getActiveWorker()))
+		if(null == (CerberusApplication::getActiveWorker()))
 			return false;
 		return true;
 	}
@@ -84,6 +84,15 @@ class Page_Domains extends CerberusPageExtension {
 };
 
 class VaAction_CreateDomain extends Extension_DevblocksEventAction {
+	static function getMeta() {
+		return [
+			'notes' => 'Use [Record create](/docs/bots/events/actions/core.bot.action.record.create/) instead.',
+			'deprecated' => true,
+			'params' => [
+			],
+		];
+	}
+	
 	function render(Extension_DevblocksEvent $event, Model_TriggerEvent $trigger, $params=array(), $seq=null) {
 		$tpl = DevblocksPlatform::services()->template();
 		$tpl->assign('params', $params);
@@ -119,7 +128,7 @@ class VaAction_CreateDomain extends Extension_DevblocksEventAction {
 			return "[ERROR] Name is required.";
 		
 		// Check dupes
-		if(false != ($domain = DAO_Domain::getByName($name))) {
+		if(false != (DAO_Domain::getByName($name))) {
 			return sprintf("[ERROR] Name must be unique. A domain named '%s' already exists.", $name);
 		}
 		
@@ -223,7 +232,7 @@ class VaAction_CreateDomain extends Extension_DevblocksEventAction {
 			return;
 		
 		// Dupe check
-		if(false != ($domain = DAO_Domain::getByName($name))) {
+		if(false != (DAO_Domain::getByName($name))) {
 			return;
 		}
 		
